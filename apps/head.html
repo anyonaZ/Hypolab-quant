@@ -1,0 +1,138 @@
+<!-- HYPOLAB: fonts + the digital-rain background (falls back to system fonts offline) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<meta name="theme-color" content="#010604">
+<script>
+/* Digital rain behind the app. 1.4.3: lighter on a T470s - 14 fps (calm: 7 fps), fewer columns, paused when the
+   tab is hidden or the window is not focused, and a [ FX ] switch (bottom right) for full / calm / off, remembered
+   in this browser. A single static frame when the system asks for reduced motion. It speeds up while marimo shows
+   a spinner (a simulation is running), then calms down again. */
+(function () {
+  if (window.__hypolabRain) return;
+  window.__hypolabRain = true;
+  var MODES = ["full", "calm", "off"];
+  var mode = "full";
+  try { mode = localStorage.getItem("hypolab-fx") || "full"; } catch (e) {}
+  if (MODES.indexOf(mode) < 0) mode = "full";
+  function applyMode() {
+    var h = document.documentElement;
+    h.classList.remove("hl-fx-full", "hl-fx-calm", "hl-fx-off");
+    h.classList.add("hl-fx-" + mode);
+    var b = document.getElementById("hypolab-fx");
+    if (b) b.textContent = "[ FX: " + mode + " ]";
+  }
+  applyMode();
+  function start() {
+    var btn = document.createElement("button");
+    btn.id = "hypolab-fx"; btn.type = "button";
+    btn.title = "Background effects: full / calm / off (off is the fastest on a slow laptop)";
+    btn.addEventListener("click", function () {
+      mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+      try { localStorage.setItem("hypolab-fx", mode); } catch (e) {}
+      applyMode(); if (mode !== "off") paintBase();
+    });
+    document.body.appendChild(btn);
+    applyMode();
+    var c = document.createElement("canvas");
+    c.id = "hypolab-rain";
+    c.setAttribute("aria-hidden", "true");
+    c.style.cssText = "position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;opacity:.5";
+    document.body.insertBefore(c, document.body.firstChild);
+    var ctx = c.getContext("2d", { alpha: false });
+    var glyphs = ("ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ0123456789" +
+                  "αβγδρσΣ∂∆√∫≈≠±∞").split("");
+    var size = 18, cols = 0, drops = [], speed = [];
+    var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function paintBase() { ctx.fillStyle = "#010604"; ctx.fillRect(0, 0, innerWidth, innerHeight); }
+    function resize() {
+      c.width = innerWidth; c.height = innerHeight;        /* 1x pixels: the rain is decoration, not text */
+      cols = Math.ceil(innerWidth / size);
+      drops = []; speed = [];
+      for (var i = 0; i < cols; i++) { drops.push(Math.random() * innerHeight / size); speed.push(0.35 + Math.random() * 0.75); }
+      paintBase();
+      ctx.font = size + "px 'JetBrains Mono', monospace";
+    }
+    var busy = false;
+    setInterval(function () {
+      busy = mode !== "off" && !!document.querySelector(".animate-spin, [data-status='running'], .marimo-cell.running");
+    }, 1000);
+    function frame() {
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = busy ? "rgba(1,6,4,0.10)" : "rgba(1,6,4,0.075)";
+      ctx.fillRect(0, 0, innerWidth, innerHeight);
+      ctx.globalAlpha = busy ? 0.95 : (mode === "calm" ? 0.45 : 0.7);
+      var base = busy ? "#38ffb0" : "#00c271";
+      for (var i = 0; i < cols; i++) {
+        var y = drops[i] * size;
+        ctx.fillStyle = Math.random() < 0.035 ? "#d9ffe9" : base;
+        ctx.fillText(glyphs[(Math.random() * glyphs.length) | 0], i * size, y);
+        drops[i] += speed[i] * (busy ? 2.4 : 1);
+        if (y > innerHeight && Math.random() > 0.975) drops[i] = 0;
+      }
+      ctx.globalAlpha = 1;
+    }
+    resize();
+    addEventListener("resize", resize);
+    if (reduced) { for (var k = 0; k < 40; k++) frame(); return; }
+    var last = 0, focused = true;
+    addEventListener("blur", function () { focused = false; });
+    addEventListener("focus", function () { focused = true; });
+    function loop(t) {
+      var gap = busy ? 45 : (mode === "calm" ? 140 : 70);
+      if (mode !== "off" && !document.hidden && (focused || busy) && t - last > gap) { frame(); last = t; }
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  }
+  if (document.body) start(); else document.addEventListener("DOMContentLoaded", start);
+})();
+
+/* Self-healing after a lost session (HYPOLAB 1.4.2). When the laptop slept or the server restarted, marimo's app
+   session is gone and the tab shows "kernel not found" (or "Failed to send function request"). Show a short
+   notice and reload into a fresh session; the Lab's "Pick up where you left off" restores the work.
+   Guarded: at most one reload per 20 s, and after 3 failed tries in 3 minutes it stops and asks. */
+(function () {
+  if (window.__hypolabHeal) return;
+  window.__hypolabHeal = true;
+  var KEY = "hypolab-heal";
+  function tries() {
+    try { return JSON.parse(sessionStorage.getItem(KEY) || "[]").filter(function (t) { return Date.now() - t < 180000; }); }
+    catch (e) { return []; }
+  }
+  function lost() {
+    /* 1.4.3: a cheap textContent test first; innerText (which needs a fresh layout, and skips hidden tabs) only
+       to confirm a hit */
+    var rx = /kernel not found|Failed to send function request/i;
+    if (!document.body || !rx.test(document.body.textContent || "")) return false;
+    return rx.test(document.body.innerText || "");
+  }
+  function notice(msg) {
+    var d = document.getElementById("hypolab-heal");
+    if (!d) {
+      d = document.createElement("div"); d.id = "hypolab-heal";
+      d.style.cssText = "position:fixed;inset:0;z-index:2147483600;display:flex;align-items:center;justify-content:center;" +
+        "background:rgba(1,6,4,.93);color:#00ff9c;font:600 18px 'JetBrains Mono',monospace;text-align:center;" +
+        "text-shadow:0 0 10px rgba(0,255,156,.6);padding:24px;line-height:1.7";
+      document.body.appendChild(d);
+    }
+    d.innerHTML = "<div>" + msg + "</div>";
+  }
+  setInterval(function () {
+    if (!lost()) return;
+    var t = tries();
+    if (t.length >= 3) {
+      notice("&gt; connection to HYPOLAB lost_<br><span style='color:#d2f5e1;font-weight:400;font-size:15px'>" +
+             "The app is not running any more. In the terminal: Ctrl+C, then <b>python -m hypolab cockpit</b>.<br>" +
+             "Your simulations are safe in the journal: the Lab's <b>Restore results</b> brings them back.</span>");
+      return;
+    }
+    if (t.length && Date.now() - t[t.length - 1] < 20000) return;
+    t.push(Date.now());
+    try { sessionStorage.setItem(KEY, JSON.stringify(t)); } catch (e) {}
+    notice("&gt; session lost while you were away_<br><span style='color:#d2f5e1;font-weight:400;font-size:15px'>" +
+           "reconnecting to a fresh one ... your work is in the journal</span>");
+    setTimeout(function () { location.reload(); }, 1500);
+  }, 3000);
+})();
+</script>

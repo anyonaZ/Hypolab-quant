@@ -1,0 +1,1356 @@
+{
+"source": "Zacc's Genius page, Pyramid theme multipliers, 2026-Q4, read 2026-10-10 10:30 (BRAIN_RULES S14)",
+"quarter": "2026-Q4",
+"rows": [
+{
+"region": "USA",
+"delay": 0,
+"category": "analyst",
+"multiplier": 1.7
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "analyst",
+"multiplier": 1.2
+},
+{
+"region": "GLB",
+"delay": 1,
+"category": "analyst",
+"multiplier": 1.4
+},
+{
+"region": "EUR",
+"delay": 0,
+"category": "analyst",
+"multiplier": 1.6
+},
+{
+"region": "EUR",
+"delay": 1,
+"category": "analyst",
+"multiplier": 1.3
+},
+{
+"region": "ASI",
+"delay": 1,
+"category": "analyst",
+"multiplier": 1.5
+},
+{
+"region": "CHN",
+"delay": 0,
+"category": "analyst",
+"multiplier": 1.9
+},
+{
+"region": "CHN",
+"delay": 1,
+"category": "analyst",
+"multiplier": 1.7
+},
+{
+"region": "JPN",
+"delay": 0,
+"category": "analyst",
+"multiplier": 1.9
+},
+{
+"region": "JPN",
+"delay": 1,
+"category": "analyst",
+"multiplier": 1.7
+},
+{
+"region": "AMR",
+"delay": 0,
+"category": "analyst",
+"multiplier": 1.9
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "analyst",
+"multiplier": 1.6
+},
+{
+"region": "IND",
+"delay": 1,
+"category": "analyst",
+"multiplier": 1.4
+},
+{
+"region": "DEU",
+"delay": 0,
+"category": "analyst",
+"multiplier": 1.9
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "analyst",
+"multiplier": 1.8
+},
+{
+"region": "GBR",
+"delay": 0,
+"category": "analyst",
+"multiplier": 1.9
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "analyst",
+"multiplier": 1.6
+},
+{
+"region": "ASI",
+"delay": 1,
+"category": "broker",
+"multiplier": 1.1
+},
+{
+"region": "USA",
+"delay": 0,
+"category": "earnings",
+"multiplier": 1.4
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "earnings",
+"multiplier": 1.2
+},
+{
+"region": "GLB",
+"delay": 1,
+"category": "earnings",
+"multiplier": 1.1
+},
+{
+"region": "EUR",
+"delay": 0,
+"category": "earnings",
+"multiplier": 1.4
+},
+{
+"region": "EUR",
+"delay": 1,
+"category": "earnings",
+"multiplier": 1.2
+},
+{
+"region": "ASI",
+"delay": 1,
+"category": "earnings",
+"multiplier": 1.1
+},
+{
+"region": "AMR",
+"delay": 0,
+"category": "earnings",
+"multiplier": 1.9
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "earnings",
+"multiplier": 1.4
+},
+{
+"region": "IND",
+"delay": 1,
+"category": "earnings",
+"multiplier": 1.1
+},
+{
+"region": "DEU",
+"delay": 0,
+"category": "earnings",
+"multiplier": 1.9
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "earnings",
+"multiplier": 1.6
+},
+{
+"region": "GBR",
+"delay": 0,
+"category": "earnings",
+"multiplier": 1.8
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "earnings",
+"multiplier": 1.3
+},
+{
+"region": "USA",
+"delay": 0,
+"category": "fundamental",
+"multiplier": 1.5
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "fundamental",
+"multiplier": 1.1
+},
+{
+"region": "GLB",
+"delay": 1,
+"category": "fundamental",
+"multiplier": 1.4
+},
+{
+"region": "EUR",
+"delay": 0,
+"category": "fundamental",
+"multiplier": 1.3
+},
+{
+"region": "EUR",
+"delay": 1,
+"category": "fundamental",
+"multiplier": 1.1
+},
+{
+"region": "ASI",
+"delay": 1,
+"category": "fundamental",
+"multiplier": 1.1
+},
+{
+"region": "CHN",
+"delay": 0,
+"category": "fundamental",
+"multiplier": 1.9
+},
+{
+"region": "CHN",
+"delay": 1,
+"category": "fundamental",
+"multiplier": 1.8
+},
+{
+"region": "JPN",
+"delay": 0,
+"category": "fundamental",
+"multiplier": 1.9
+},
+{
+"region": "JPN",
+"delay": 1,
+"category": "fundamental",
+"multiplier": 1.7
+},
+{
+"region": "AMR",
+"delay": 0,
+"category": "fundamental",
+"multiplier": 1.8
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "fundamental",
+"multiplier": 1.8
+},
+{
+"region": "IND",
+"delay": 1,
+"category": "fundamental",
+"multiplier": 1.2
+},
+{
+"region": "DEU",
+"delay": 0,
+"category": "fundamental",
+"multiplier": 1.9
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "fundamental",
+"multiplier": 1.8
+},
+{
+"region": "GBR",
+"delay": 0,
+"category": "fundamental",
+"multiplier": 1.9
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "fundamental",
+"multiplier": 1.6
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "imbalance",
+"multiplier": 1.0
+},
+{
+"region": "EUR",
+"delay": 0,
+"category": "imbalance",
+"multiplier": 1.0
+},
+{
+"region": "EUR",
+"delay": 1,
+"category": "imbalance",
+"multiplier": 1.0
+},
+{
+"region": "ASI",
+"delay": 1,
+"category": "imbalance",
+"multiplier": 1.0
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "imbalance",
+"multiplier": 1.0
+},
+{
+"region": "IND",
+"delay": 1,
+"category": "imbalance",
+"multiplier": 1.0
+},
+{
+"region": "DEU",
+"delay": 0,
+"category": "imbalance",
+"multiplier": 1.6
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "imbalance",
+"multiplier": 1.3
+},
+{
+"region": "GBR",
+"delay": 0,
+"category": "imbalance",
+"multiplier": 1.5
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "imbalance",
+"multiplier": 1.0
+},
+{
+"region": "USA",
+"delay": 0,
+"category": "insiders",
+"multiplier": 1.5
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "insiders",
+"multiplier": 1.1
+},
+{
+"region": "GLB",
+"delay": 1,
+"category": "insiders",
+"multiplier": 1.1
+},
+{
+"region": "EUR",
+"delay": 0,
+"category": "insiders",
+"multiplier": 1.4
+},
+{
+"region": "EUR",
+"delay": 1,
+"category": "insiders",
+"multiplier": 1.2
+},
+{
+"region": "AMR",
+"delay": 0,
+"category": "insiders",
+"multiplier": 1.8
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "insiders",
+"multiplier": 1.4
+},
+{
+"region": "IND",
+"delay": 1,
+"category": "insiders",
+"multiplier": 1.1
+},
+{
+"region": "DEU",
+"delay": 0,
+"category": "insiders",
+"multiplier": 1.9
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "insiders",
+"multiplier": 1.7
+},
+{
+"region": "GBR",
+"delay": 0,
+"category": "insiders",
+"multiplier": 1.9
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "insiders",
+"multiplier": 1.5
+},
+{
+"region": "USA",
+"delay": 0,
+"category": "institutions",
+"multiplier": 1.3
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "institutions",
+"multiplier": 1.0
+},
+{
+"region": "GLB",
+"delay": 1,
+"category": "institutions",
+"multiplier": 1.1
+},
+{
+"region": "EUR",
+"delay": 0,
+"category": "institutions",
+"multiplier": 1.5
+},
+{
+"region": "EUR",
+"delay": 1,
+"category": "institutions",
+"multiplier": 1.1
+},
+{
+"region": "ASI",
+"delay": 1,
+"category": "institutions",
+"multiplier": 1.2
+},
+{
+"region": "CHN",
+"delay": 1,
+"category": "institutions",
+"multiplier": 1.5
+},
+{
+"region": "JPN",
+"delay": 1,
+"category": "institutions",
+"multiplier": 1.3
+},
+{
+"region": "AMR",
+"delay": 0,
+"category": "institutions",
+"multiplier": 1.9
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "institutions",
+"multiplier": 1.4
+},
+{
+"region": "IND",
+"delay": 1,
+"category": "institutions",
+"multiplier": 1.0
+},
+{
+"region": "DEU",
+"delay": 0,
+"category": "institutions",
+"multiplier": 1.8
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "institutions",
+"multiplier": 1.6
+},
+{
+"region": "GBR",
+"delay": 0,
+"category": "institutions",
+"multiplier": 1.8
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "institutions",
+"multiplier": 1.5
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "macro",
+"multiplier": 1.1
+},
+{
+"region": "GLB",
+"delay": 1,
+"category": "macro",
+"multiplier": 1.1
+},
+{
+"region": "ASI",
+"delay": 1,
+"category": "macro",
+"multiplier": 1.0
+},
+{
+"region": "CHN",
+"delay": 1,
+"category": "macro",
+"multiplier": 1.8
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "macro",
+"multiplier": 1.4
+},
+{
+"region": "IND",
+"delay": 1,
+"category": "macro",
+"multiplier": 1.0
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "macro",
+"multiplier": 1.5
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "macro",
+"multiplier": 1.3
+},
+{
+"region": "USA",
+"delay": 0,
+"category": "model",
+"multiplier": 1.6
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "model",
+"multiplier": 1.3
+},
+{
+"region": "GLB",
+"delay": 1,
+"category": "model",
+"multiplier": 1.3
+},
+{
+"region": "EUR",
+"delay": 0,
+"category": "model",
+"multiplier": 1.6
+},
+{
+"region": "EUR",
+"delay": 1,
+"category": "model",
+"multiplier": 1.3
+},
+{
+"region": "ASI",
+"delay": 1,
+"category": "model",
+"multiplier": 1.2
+},
+{
+"region": "CHN",
+"delay": 0,
+"category": "model",
+"multiplier": 1.8
+},
+{
+"region": "CHN",
+"delay": 1,
+"category": "model",
+"multiplier": 1.6
+},
+{
+"region": "JPN",
+"delay": 0,
+"category": "model",
+"multiplier": 1.8
+},
+{
+"region": "JPN",
+"delay": 1,
+"category": "model",
+"multiplier": 1.7
+},
+{
+"region": "AMR",
+"delay": 0,
+"category": "model",
+"multiplier": 1.8
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "model",
+"multiplier": 1.6
+},
+{
+"region": "IND",
+"delay": 1,
+"category": "model",
+"multiplier": 1.2
+},
+{
+"region": "DEU",
+"delay": 0,
+"category": "model",
+"multiplier": 1.9
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "model",
+"multiplier": 1.8
+},
+{
+"region": "GBR",
+"delay": 0,
+"category": "model",
+"multiplier": 1.7
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "model",
+"multiplier": 1.6
+},
+{
+"region": "USA",
+"delay": 0,
+"category": "news",
+"multiplier": 1.7
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "news",
+"multiplier": 1.2
+},
+{
+"region": "GLB",
+"delay": 1,
+"category": "news",
+"multiplier": 1.3
+},
+{
+"region": "EUR",
+"delay": 0,
+"category": "news",
+"multiplier": 1.5
+},
+{
+"region": "EUR",
+"delay": 1,
+"category": "news",
+"multiplier": 1.3
+},
+{
+"region": "ASI",
+"delay": 1,
+"category": "news",
+"multiplier": 1.2
+},
+{
+"region": "CHN",
+"delay": 0,
+"category": "news",
+"multiplier": 1.8
+},
+{
+"region": "CHN",
+"delay": 1,
+"category": "news",
+"multiplier": 1.7
+},
+{
+"region": "AMR",
+"delay": 0,
+"category": "news",
+"multiplier": 1.9
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "news",
+"multiplier": 1.7
+},
+{
+"region": "IND",
+"delay": 1,
+"category": "news",
+"multiplier": 1.3
+},
+{
+"region": "DEU",
+"delay": 0,
+"category": "news",
+"multiplier": 1.9
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "news",
+"multiplier": 1.8
+},
+{
+"region": "GBR",
+"delay": 0,
+"category": "news",
+"multiplier": 1.9
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "news",
+"multiplier": 1.6
+},
+{
+"region": "USA",
+"delay": 0,
+"category": "option",
+"multiplier": 1.7
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "option",
+"multiplier": 1.3
+},
+{
+"region": "GLB",
+"delay": 1,
+"category": "option",
+"multiplier": 1.2
+},
+{
+"region": "EUR",
+"delay": 1,
+"category": "option",
+"multiplier": 1.2
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "option",
+"multiplier": 1.5
+},
+{
+"region": "IND",
+"delay": 1,
+"category": "option",
+"multiplier": 1.2
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "option",
+"multiplier": 1.7
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "option",
+"multiplier": 1.5
+},
+{
+"region": "USA",
+"delay": 0,
+"category": "other",
+"multiplier": 1.7
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "other",
+"multiplier": 1.4
+},
+{
+"region": "GLB",
+"delay": 1,
+"category": "other",
+"multiplier": 1.3
+},
+{
+"region": "EUR",
+"delay": 0,
+"category": "other",
+"multiplier": 1.7
+},
+{
+"region": "EUR",
+"delay": 1,
+"category": "other",
+"multiplier": 1.5
+},
+{
+"region": "ASI",
+"delay": 1,
+"category": "other",
+"multiplier": 1.4
+},
+{
+"region": "CHN",
+"delay": 0,
+"category": "other",
+"multiplier": 1.8
+},
+{
+"region": "CHN",
+"delay": 1,
+"category": "other",
+"multiplier": 1.9
+},
+{
+"region": "JPN",
+"delay": 0,
+"category": "other",
+"multiplier": 1.7
+},
+{
+"region": "JPN",
+"delay": 1,
+"category": "other",
+"multiplier": 1.7
+},
+{
+"region": "AMR",
+"delay": 0,
+"category": "other",
+"multiplier": 1.9
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "other",
+"multiplier": 1.7
+},
+{
+"region": "IND",
+"delay": 1,
+"category": "other",
+"multiplier": 1.3
+},
+{
+"region": "DEU",
+"delay": 0,
+"category": "other",
+"multiplier": 1.9
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "other",
+"multiplier": 1.8
+},
+{
+"region": "GBR",
+"delay": 0,
+"category": "other",
+"multiplier": 1.9
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "other",
+"multiplier": 1.6
+},
+{
+"region": "USA",
+"delay": 0,
+"category": "pv",
+"multiplier": 1.5
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "pv",
+"multiplier": 1.1
+},
+{
+"region": "GLB",
+"delay": 1,
+"category": "pv",
+"multiplier": 1.0
+},
+{
+"region": "EUR",
+"delay": 0,
+"category": "pv",
+"multiplier": 1.4
+},
+{
+"region": "EUR",
+"delay": 1,
+"category": "pv",
+"multiplier": 1.1
+},
+{
+"region": "ASI",
+"delay": 1,
+"category": "pv",
+"multiplier": 1.0
+},
+{
+"region": "CHN",
+"delay": 0,
+"category": "pv",
+"multiplier": 1.6
+},
+{
+"region": "CHN",
+"delay": 1,
+"category": "pv",
+"multiplier": 1.4
+},
+{
+"region": "JPN",
+"delay": 0,
+"category": "pv",
+"multiplier": 1.8
+},
+{
+"region": "JPN",
+"delay": 1,
+"category": "pv",
+"multiplier": 1.5
+},
+{
+"region": "AMR",
+"delay": 0,
+"category": "pv",
+"multiplier": 1.5
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "pv",
+"multiplier": 1.4
+},
+{
+"region": "IND",
+"delay": 1,
+"category": "pv",
+"multiplier": 1.1
+},
+{
+"region": "DEU",
+"delay": 0,
+"category": "pv",
+"multiplier": 1.8
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "pv",
+"multiplier": 1.7
+},
+{
+"region": "GBR",
+"delay": 0,
+"category": "pv",
+"multiplier": 1.5
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "pv",
+"multiplier": 1.5
+},
+{
+"region": "USA",
+"delay": 0,
+"category": "risk",
+"multiplier": 1.1
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "risk",
+"multiplier": 1.1
+},
+{
+"region": "GLB",
+"delay": 1,
+"category": "risk",
+"multiplier": 1.0
+},
+{
+"region": "EUR",
+"delay": 0,
+"category": "risk",
+"multiplier": 1.2
+},
+{
+"region": "EUR",
+"delay": 1,
+"category": "risk",
+"multiplier": 1.0
+},
+{
+"region": "ASI",
+"delay": 1,
+"category": "risk",
+"multiplier": 1.0
+},
+{
+"region": "CHN",
+"delay": 1,
+"category": "risk",
+"multiplier": 1.6
+},
+{
+"region": "AMR",
+"delay": 0,
+"category": "risk",
+"multiplier": 1.8
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "risk",
+"multiplier": 1.4
+},
+{
+"region": "IND",
+"delay": 1,
+"category": "risk",
+"multiplier": 1.0
+},
+{
+"region": "DEU",
+"delay": 0,
+"category": "risk",
+"multiplier": 1.8
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "risk",
+"multiplier": 1.5
+},
+{
+"region": "GBR",
+"delay": 0,
+"category": "risk",
+"multiplier": 1.3
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "risk",
+"multiplier": 1.3
+},
+{
+"region": "USA",
+"delay": 0,
+"category": "sentiment",
+"multiplier": 1.8
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "sentiment",
+"multiplier": 1.4
+},
+{
+"region": "GLB",
+"delay": 1,
+"category": "sentiment",
+"multiplier": 1.4
+},
+{
+"region": "EUR",
+"delay": 0,
+"category": "sentiment",
+"multiplier": 1.5
+},
+{
+"region": "EUR",
+"delay": 1,
+"category": "sentiment",
+"multiplier": 1.4
+},
+{
+"region": "ASI",
+"delay": 1,
+"category": "sentiment",
+"multiplier": 1.4
+},
+{
+"region": "CHN",
+"delay": 0,
+"category": "sentiment",
+"multiplier": 1.8
+},
+{
+"region": "CHN",
+"delay": 1,
+"category": "sentiment",
+"multiplier": 1.7
+},
+{
+"region": "JPN",
+"delay": 0,
+"category": "sentiment",
+"multiplier": 1.9
+},
+{
+"region": "JPN",
+"delay": 1,
+"category": "sentiment",
+"multiplier": 1.6
+},
+{
+"region": "AMR",
+"delay": 0,
+"category": "sentiment",
+"multiplier": 1.9
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "sentiment",
+"multiplier": 1.7
+},
+{
+"region": "IND",
+"delay": 1,
+"category": "sentiment",
+"multiplier": 1.2
+},
+{
+"region": "DEU",
+"delay": 0,
+"category": "sentiment",
+"multiplier": 1.9
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "sentiment",
+"multiplier": 1.8
+},
+{
+"region": "GBR",
+"delay": 0,
+"category": "sentiment",
+"multiplier": 1.9
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "sentiment",
+"multiplier": 1.7
+},
+{
+"region": "USA",
+"delay": 0,
+"category": "shortinterest",
+"multiplier": 1.5
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "shortinterest",
+"multiplier": 1.1
+},
+{
+"region": "GLB",
+"delay": 1,
+"category": "shortinterest",
+"multiplier": 1.0
+},
+{
+"region": "EUR",
+"delay": 0,
+"category": "shortinterest",
+"multiplier": 1.5
+},
+{
+"region": "EUR",
+"delay": 1,
+"category": "shortinterest",
+"multiplier": 1.1
+},
+{
+"region": "ASI",
+"delay": 1,
+"category": "shortinterest",
+"multiplier": 1.3
+},
+{
+"region": "CHN",
+"delay": 0,
+"category": "shortinterest",
+"multiplier": 1.2
+},
+{
+"region": "CHN",
+"delay": 1,
+"category": "shortinterest",
+"multiplier": 1.3
+},
+{
+"region": "AMR",
+"delay": 0,
+"category": "shortinterest",
+"multiplier": 1.8
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "shortinterest",
+"multiplier": 1.3
+},
+{
+"region": "IND",
+"delay": 1,
+"category": "shortinterest",
+"multiplier": 1.0
+},
+{
+"region": "DEU",
+"delay": 0,
+"category": "shortinterest",
+"multiplier": 1.8
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "shortinterest",
+"multiplier": 1.4
+},
+{
+"region": "GBR",
+"delay": 0,
+"category": "shortinterest",
+"multiplier": 1.2
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "shortinterest",
+"multiplier": 1.3
+},
+{
+"region": "USA",
+"delay": 0,
+"category": "socialmedia",
+"multiplier": 1.5
+},
+{
+"region": "USA",
+"delay": 1,
+"category": "socialmedia",
+"multiplier": 1.0
+},
+{
+"region": "GLB",
+"delay": 1,
+"category": "socialmedia",
+"multiplier": 1.1
+},
+{
+"region": "EUR",
+"delay": 0,
+"category": "socialmedia",
+"multiplier": 1.1
+},
+{
+"region": "EUR",
+"delay": 1,
+"category": "socialmedia",
+"multiplier": 1.1
+},
+{
+"region": "ASI",
+"delay": 1,
+"category": "socialmedia",
+"multiplier": 1.2
+},
+{
+"region": "CHN",
+"delay": 1,
+"category": "socialmedia",
+"multiplier": 1.1
+},
+{
+"region": "AMR",
+"delay": 1,
+"category": "socialmedia",
+"multiplier": 1.4
+},
+{
+"region": "DEU",
+"delay": 0,
+"category": "socialmedia",
+"multiplier": 1.8
+},
+{
+"region": "DEU",
+"delay": 1,
+"category": "socialmedia",
+"multiplier": 1.5
+},
+{
+"region": "GBR",
+"delay": 0,
+"category": "socialmedia",
+"multiplier": 1.9
+},
+{
+"region": "GBR",
+"delay": 1,
+"category": "socialmedia",
+"multiplier": 1.3
+}
+]
+}

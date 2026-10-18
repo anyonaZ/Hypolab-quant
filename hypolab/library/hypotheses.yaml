@@ -1,0 +1,1351 @@
+# =============================================================================
+#  HYPOTHESIS LIBRARY  -  the "ideas" layer the zip's notebooks never had
+# =============================================================================
+#  Each card is an ECONOMIC IDEA first and an expression second:
+#    story          - the mechanism in plain English (why would this predict returns?)
+#    why_persists   - why it has not been arbitraged away (who is on the other side?)
+#    sign           - +1: higher signal -> higher future return
+#    references     - where the idea comes from (read the abstract at least)
+#    roles          - the data the idea needs, as ECONOMIC CONCEPTS; the idea engine
+#                     binds them to real field ids in YOUR region (hypolab/concepts.py)
+#    ladder         - 2-4 implementations, simplest first. Simulate step 1, read the
+#                     diagnosis, then climb ONE rung at a time. Never grid-search.
+#    strength       - 3 = replicated in many markets; 2 = solid in papers; 1 = speculative
+#    category       - BRAIN data category for pyramids ("auto" = from the fields bound)
+#
+#  Placeholders in expressions:
+#    {role}         -> the bound field (VECTOR fields are wrapped in vec_avg automatically)
+#    {dir:role}     -> 1 or -1, from the field description ("higher is better" etc.)
+#  Standard price/volume fields (close, open, high, low, vwap, volume, returns, adv20,
+#  cap, sharesout) exist in every region and are written directly.
+#
+#  Add your own cards at the bottom. The idea engine reloads this file every time.
+# =============================================================================
+
+# --------------------------------------------------------------- PRICE VOLUME
+- id: PV_REV_QUIET
+  title: Short-term reversal of quiet (low-volume) price moves
+  category: pv
+  family: pv_reversal
+  horizon: fast
+  strength: 3
+  beginner: true
+  sign: "+1 on minus past-week return"
+  story: >
+    Prices overshoot when an investor needs liquidity and pushes the price; the move
+    reverts over the next days once liquidity returns. Moves on LOW volume are more
+    likely to be this kind of noise; moves on HIGH volume more often carry real news
+    that persists. So: buy last week's losers and sell last week's winners, mostly
+    among the quiet movers, compared within their own sub-industry.
+  why_persists: >
+    You are paid for providing liquidity - you take the other side of hurried
+    traders. The edge is small per trade and needs frequent trading.
+  references:
+    - "Jegadeesh (1990) Evidence of Predictable Behavior of Security Returns, Journal of Finance"
+    - "Campbell, Grossman & Wang (1993) Trading Volume and Serial Correlation in Stock Returns, QJE"
+    - "Nagel (2012) Evaporating Liquidity, Review of Financial Studies"
+  roles: {}
+  ladder:
+    - name: core
+      expr: "group_rank(-ts_sum(returns, 5), subindustry)"
+      teaches: "Plain one-week reversal against sub-industry peers. Expect high turnover."
+    - name: quiet-moves-only
+      expr: "group_rank(-ts_sum(returns, 5), subindustry) * (1 - rank(ts_mean(volume, 5) / adv20))"
+      teaches: "Multiplying by 'how quiet was the week' concentrates on moves without news."
+    - name: smoothed
+      expr: "ts_decay_linear(group_rank(-ts_sum(returns, 5), subindustry) * (1 - rank(ts_mean(volume, 5) / adv20)), 5)"
+      teaches: "Linear decay over a week trades less - helps fitness when turnover is above 12.5%."
+  settings: {neutralization: SUBINDUSTRY, decay: 3, truncation: 0.08}
+  expected_turnover: [0.25, 0.65]
+  watch_out:
+    - "Naked close-price reversion can trigger BRAIN's REVERSION_COMPONENT warning; the volume condition helps."
+    - "Very crowded idea - check self/prod correlation before you get attached to it."
+
+- id: PV_52W_HIGH
+  title: Nearness to the 52-week high (anchoring)
+  category: pv
+  family: pv_momentum
+  horizon: medium
+  strength: 3
+  beginner: true
+  sign: "+1"
+  story: >
+    Investors anchor on the 52-week high: when good news pushes a stock near its high,
+    they hesitate to bid it above that level, so the price under-reacts and keeps
+    drifting up later. Stocks far below their high do the opposite.
+  why_persists: >
+    A behavioural bias (anchoring) shared by many investors; it competes with the
+    'buy low' instinct, so it is not obvious to most traders.
+  references:
+    - "George & Hwang (2004) The 52-Week High and Momentum Investing, Journal of Finance"
+  roles: {}
+  ladder:
+    - name: core
+      expr: "group_rank(close / ts_max(high, 252), industry)"
+      teaches: "Close divided by the year's highest high: 1.0 = at the high."
+    - name: recency-of-high
+      expr: "group_rank(-ts_arg_max(close, 252), industry)"
+      teaches: "Same idea measured as 'how many days since the high' - fewer days is stronger."
+    - name: smoothed
+      expr: "ts_mean(group_rank(close / ts_max(high, 252), industry), 5)"
+      teaches: "A week of smoothing removes day-to-day noise near the threshold."
+  settings: {neutralization: INDUSTRY, decay: 4, truncation: 0.08}
+  expected_turnover: [0.05, 0.20]
+  watch_out:
+    - "Momentum-type signals crash in sharp market rebounds (e.g. 2009, 2020) - look at yearly Sharpe."
+
+- id: PV_RESID_MOM
+  title: Residual (stock-specific) momentum
+  category: auto
+  family: pv_momentum
+  horizon: medium
+  strength: 3
+  sign: "+1"
+  story: >
+    Classic 12-month momentum is mostly a bet on industries and market beta, and it
+    crashes. The part of a stock's return that is NOT explained by its industry or
+    common factors - its residual return - also trends, more smoothly, because
+    stock-specific news is absorbed slowly by investors.
+  why_persists: >
+    Slow diffusion of firm-specific information; investors under-react to news that
+    is not in the headlines of the whole sector.
+  references:
+    - "Blitz, Huij & Martens (2011) Residual Momentum, Journal of Empirical Finance"
+    - "Jegadeesh & Titman (1993) Returns to Buying Winners and Selling Losers, Journal of Finance"
+  roles:
+    spret: {concept: specific_return, optional: true, note: "daily specific/idiosyncratic return from a risk model"}
+  ladder:
+    - name: industry-residual
+      expr: "rank(ts_sum(ts_delay(group_neutralize(returns, subindustry), 21), 231) / ts_std_dev(group_neutralize(returns, subindustry), 252))"
+      teaches: "Return minus sub-industry average, summed over months 2-12, divided by its volatility (a 'Sharpe' of residuals). Skipping the last month avoids short-term reversal."
+    - name: risk-model-residual
+      expr: "rank(ts_sum(ts_delay({spret}, 21), 231) / ts_std_dev({spret}, 252))"
+      teaches: "Same, using the vendor's risk-model residual return when it exists in your region."
+  settings: {neutralization: SUBINDUSTRY, decay: 5, truncation: 0.08}
+  expected_turnover: [0.05, 0.15]
+  watch_out:
+    - "Skip-month (ts_delay 21) matters: without it you mix in one-month reversal."
+
+- id: PV_LOW_RISK
+  title: Low-risk anomaly (calm stocks beat lottery stocks)
+  category: pv
+  family: pv_lowrisk
+  horizon: slow
+  strength: 3
+  beginner: true
+  sign: "-1 on volatility"
+  story: >
+    Many investors cannot use leverage, so to get more return they buy volatile,
+    high-beta stocks. That demand makes risky stocks overpriced and calm stocks
+    underpriced: per unit of risk, calm stocks pay more.
+  why_persists: >
+    Leverage constraints and benchmark-hugging fund managers are structural; the
+    trade also loses in strong bull markets, which scares people away.
+  references:
+    - "Ang, Hodrick, Xing & Zhang (2006) The Cross-Section of Volatility and Expected Returns, Journal of Finance"
+    - "Frazzini & Pedersen (2014) Betting Against Beta, Journal of Financial Economics"
+  roles: {}
+  ladder:
+    - name: total-vol
+      expr: "-group_rank(ts_std_dev(returns, 126), sector)"
+      teaches: "Rank half-year volatility within sector; short the most volatile."
+    - name: idiosyncratic-vol
+      expr: "-group_rank(ts_std_dev(group_neutralize(returns, subindustry), 63), sector)"
+      teaches: "Volatility of the stock relative to its peers - the 'idiosyncratic volatility puzzle'."
+  settings: {neutralization: SECTOR, decay: 5, truncation: 0.08}
+  expected_turnover: [0.02, 0.08]
+  watch_out:
+    - "Turnover is below the 12.5% fitness floor: fitness depends on returns, not on smoothing. Do not add decay."
+    - "Has a strong size tilt (small stocks are volatile) - check LOW_SUB_UNIVERSE_SHARPE."
+
+- id: PV_LOTTERY_MAX
+  title: Lottery demand - avoid stocks with extreme recent up-days
+  category: pv
+  family: pv_lowrisk
+  horizon: medium
+  strength: 2
+  sign: "-1 on max daily return"
+  story: >
+    Some investors love lottery-like stocks that recently had a huge one-day jump and
+    overpay for that small chance of another jackpot. Those stocks then underperform.
+  why_persists: >
+    Preference for skewness is a stable behavioural trait, strongest among retail investors.
+  references:
+    - "Bali, Cakici & Whitelaw (2011) Maxing Out: Stocks as Lotteries, Journal of Financial Economics"
+  roles: {}
+  ladder:
+    - name: core
+      expr: "-group_rank(ts_max(returns, 21), industry)"
+      teaches: "Highest single-day return in the last month, ranked within industry."
+    - name: average-of-top-days
+      expr: "-group_rank(ts_mean(ts_max(returns, 5), 21), industry)"
+      teaches: "Average of weekly maxima is less noisy than one extreme day."
+  settings: {neutralization: INDUSTRY, decay: 4, truncation: 0.08}
+  expected_turnover: [0.10, 0.30]
+  watch_out:
+    - "Correlates with the low-risk card above - do not expect both to pass self-correlation."
+
+- id: PV_ABNORMAL_VOLUME
+  title: High-volume return premium (visibility)
+  category: pv
+  family: pv_volume
+  horizon: medium
+  strength: 2
+  sign: "+1"
+  story: >
+    A stock that suddenly trades much more than usual gets noticed by new investors.
+    More attention means more potential buyers, so prices tend to rise in the
+    following weeks - as long as the volume spike was not caused by a price crash.
+  why_persists: >
+    Attention is a scarce resource; short-selling costs prevent fully trading against
+    the attention effect.
+  references:
+    - "Gervais, Kaniel & Mingelgrin (2001) The High-Volume Return Premium, Journal of Finance"
+  roles: {}
+  ladder:
+    - name: core
+      expr: "group_rank(ts_mean(volume, 5) / ts_mean(volume, 63), subindustry)"
+      teaches: "This week's volume versus the quarter's normal volume."
+    - name: without-price-crash
+      expr: "group_rank(ts_mean(volume, 5) / ts_mean(volume, 63), subindustry) * rank(ts_sum(returns, 5))"
+      teaches: "Interaction: volume spikes that came with rising prices."
+  settings: {neutralization: SUBINDUSTRY, decay: 4, truncation: 0.08}
+  expected_turnover: [0.20, 0.50]
+  watch_out:
+    - "Earnings days create volume spikes - this overlaps with earnings drift."
+
+- id: PV_OVERNIGHT_TUG
+  title: Overnight vs intraday returns ("tug of war")
+  category: pv
+  family: pv_overnight
+  horizon: medium
+  strength: 2
+  sign: "+1 overnight, -1 intraday"
+  story: >
+    Different investors trade at different times: individuals and news reactions move
+    prices overnight (open vs previous close), institutions trade during the day.
+    Momentum lives in the overnight part; intraday moves tend to reverse. Separating
+    the two halves of each day's return gives a cleaner signal than total return.
+  why_persists: >
+    Clientele effect - the two groups of investors do not arbitrage each other's flows.
+  references:
+    - "Lou, Polk & Skouras (2019) A Tug of War: Overnight Versus Intraday Expected Returns, Journal of Financial Economics"
+  roles: {}
+  ladder:
+    - name: core
+      expr: "rank(ts_sum(open / ts_delay(close, 1) - 1, 21)) - rank(ts_sum(close / open - 1, 21))"
+      teaches: "Sum of overnight returns minus sum of intraday returns over a month."
+    - name: robust
+      expr: "rank(ts_sum(winsorize(open / ts_delay(close, 1) - 1, std=4), 63)) - rank(ts_sum(winsorize(close / open - 1, std=4), 63))"
+      teaches: "Winsorize daily pieces (splits/gaps create outliers) and use a quarter."
+  settings: {neutralization: SUBINDUSTRY, decay: 4, truncation: 0.08}
+  expected_turnover: [0.10, 0.35]
+  watch_out:
+    - "Splits can create fake overnight gaps if prices are not adjusted - winsorize."
+
+- id: PV_INDUSTRY_LEADLAG
+  title: Laggards inside winning industries (slow information diffusion)
+  category: pv
+  family: pv_industry
+  horizon: medium
+  strength: 2
+  sign: "+1 on industry return minus own return"
+  story: >
+    News about an industry is reflected first in its big, well-followed stocks and
+    only later in the smaller ones. A stock that lagged its industry's (cap-weighted)
+    move tends to catch up.
+  why_persists: >
+    Limited attention to small stocks; analysts and investors cover leaders first.
+  references:
+    - "Hou (2007) Industry Information Diffusion and the Lead-Lag Effect in Stock Returns, Review of Financial Studies"
+    - "Moskowitz & Grinblatt (1999) Do Industries Explain Momentum?, Journal of Finance"
+  roles: {}
+  ladder:
+    - name: catch-up
+      expr: "rank(group_mean(ts_sum(returns, 21), cap, industry) - ts_sum(returns, 21))"
+      teaches: "Cap-weighted industry return (group_mean with cap as weight) minus the stock's own return."
+    - name: catch-up-in-strong-industries
+      expr: "rank(group_mean(ts_sum(returns, 21), cap, industry) - ts_sum(returns, 21)) * rank(group_mean(ts_sum(returns, 63), cap, industry))"
+      teaches: "Focus on industries that are actually moving."
+  settings: {neutralization: MARKET, decay: 4, truncation: 0.08}
+  expected_turnover: [0.15, 0.40]
+  watch_out:
+    - "Do NOT use INDUSTRY neutralization for the second rung - it would delete the industry part of the signal."
+
+- id: PV_SIZE_NEUTRAL_REVERSAL
+  title: Reversal neutral to size buckets (custom groups)
+  category: pv
+  family: pv_reversal
+  horizon: fast
+  strength: 2
+  sign: "+1 on minus past return"
+  story: >
+    Same liquidity-provision idea as the quiet-reversal card, but comparing each stock
+    only with stocks of similar SIZE. Small and large stocks revert at different
+    speeds; mixing them lets size dominate the ranking.
+  why_persists: "Liquidity provision premium (see PV_REV_QUIET)."
+  references:
+    - "Avramov, Chordia & Goyal (2006) Liquidity and Autocorrelations in Individual Stock Returns, Journal of Finance"
+  roles: {}
+  ladder:
+    - name: core
+      expr: "group_rank(-ts_sum(returns, 5), bucket(rank(cap), range=\"0,1,0.1\"))"
+      teaches: "bucket(rank(cap)) makes 10 size groups - a grouping nobody else's industry codes give you."
+    - name: double-grouping
+      expr: "group_rank(-ts_sum(returns, 5), group_cartesian_product(sector, bucket(rank(cap), range=\"0,1,0.2\")))"
+      teaches: "Sector x size-quintile groups."
+  settings: {neutralization: SUBINDUSTRY, decay: 3, truncation: 0.08}
+  expected_turnover: [0.30, 0.65]
+  watch_out:
+    - "Shares the same family as PV_REV_QUIET: submit at most one of them."
+
+- id: PV_NET_ISSUANCE
+  title: Share issuance vs buybacks
+  category: pv
+  family: corp_finance
+  horizon: slow
+  strength: 3
+  beginner: true
+  sign: "-1 on growth in shares outstanding"
+  story: >
+    Managers issue new shares when they think their stock is expensive and buy back
+    shares when they think it is cheap. They know their company better than the
+    market, so firms that shrink their share count outperform firms that dilute.
+  why_persists: >
+    Managers' private information; the market under-reacts to slow, undramatic
+    changes in the share count.
+  references:
+    - "Pontiff & Woodgate (2008) Share Issuance and Cross-sectional Returns, Journal of Finance"
+    - "Daniel & Titman (2006) Market Reactions to Tangible and Intangible Information, Journal of Finance"
+  roles: {}
+  ladder:
+    - name: core
+      expr: "-group_rank(log(sharesout / ts_delay(sharesout, 252)), subindustry)"
+      teaches: "One-year log change of shares outstanding. Negative = buyback = good."
+    - name: two-year
+      expr: "-group_rank(log(ts_backfill(sharesout, 21) / ts_delay(ts_backfill(sharesout, 21), 504)), subindustry)"
+      teaches: "Two years captures slow buyback programmes."
+  settings: {neutralization: SUBINDUSTRY, decay: 0, truncation: 0.08}
+  expected_turnover: [0.01, 0.06]
+  watch_out:
+    - "Very low turnover: below 1% fails LOW_TURNOVER. If so, try the one-year version or decay 0."
+
+# ---------------------------------------------------------------- FUNDAMENTAL
+- id: FND_CASHFLOW_YIELD
+  title: Cash-flow yield (cheap on cash, not accounting profit)
+  category: auto
+  family: fnd_value
+  horizon: slow
+  strength: 3
+  beginner: true
+  sign: "+1"
+  story: >
+    Operating cash flow divided by market value tells you how much cash you buy per
+    dollar invested. Cash is harder to manipulate than earnings. Cheap stocks on this
+    measure, compared with their sub-industry, tend to outperform; improving cash
+    yield is a second, faster signal. (This is BRAIN's own beginner example.)
+  why_persists: >
+    Investors extrapolate past growth and overpay for glamour stocks; value also
+    carries distress risk that some investors will not hold.
+  references:
+    - "Lakonishok, Shleifer & Vishny (1994) Contrarian Investment, Extrapolation, and Risk, Journal of Finance"
+    - "WorldQuant BRAIN Learn: Alpha Examples for Beginners (Fundamental example)"
+  roles:
+    cfo: {concept: cfo, note: "operating cash flow"}
+  ladder:
+    - name: level
+      expr: "group_rank(ts_backfill({cfo}, 252) / cap, subindustry)"
+      teaches: "Cash flow / market cap within sub-industry. ts_backfill carries quarterly values forward."
+    - name: improving
+      expr: "group_rank(ts_delta(ts_backfill({cfo}, 252) / cap, 252), subindustry)"
+      teaches: "Change in cash yield over a year - is the firm getting cheaper on cash?"
+    - name: level-plus-trend
+      expr: "group_rank(ts_backfill({cfo}, 252) / cap, subindustry) + group_rank(ts_delta(ts_backfill({cfo}, 252) / cap, 252), subindustry)"
+      teaches: "Equal-weight the two ranked legs."
+  settings: {neutralization: SUBINDUSTRY, decay: 0, truncation: 0.08}
+  expected_turnover: [0.02, 0.10]
+  watch_out:
+    - "Banks/insurers have meaningless operating cash flow; sub-industry ranking contains the damage."
+
+- id: FND_EARNINGS_YIELD
+  title: Earnings yield (value)
+  category: auto
+  family: fnd_value
+  horizon: slow
+  strength: 3
+  beginner: true
+  sign: "+1"
+  story: >
+    Net income divided by market value: how much profit you buy per dollar. The
+    market extrapolates bad news too far for cheap firms and good news too far for
+    expensive ones, so cheap-for-their-industry stocks beat expensive ones over time.
+  why_persists: >
+    Extrapolation bias and career risk - value stocks look bad when you buy them.
+  references:
+    - "Basu (1977) Investment Performance of Common Stocks in Relation to Their Price-Earnings Ratios, Journal of Finance"
+    - "Fama & French (1992) The Cross-Section of Expected Stock Returns, Journal of Finance"
+  roles:
+    ni: {concept: net_income, note: "net income (annual or trailing)"}
+  ladder:
+    - name: level
+      expr: "group_rank(ts_backfill({ni}, 252) / cap, subindustry)"
+      teaches: "Earnings yield ranked within sub-industry."
+    - name: change
+      expr: "group_rank(ts_delta(ts_backfill({ni}, 252) / cap, 252), subindustry)"
+      teaches: "Yield change over a year."
+  settings: {neutralization: SUBINDUSTRY, decay: 0, truncation: 0.08}
+  expected_turnover: [0.02, 0.10]
+  watch_out:
+    - "Value is the most crowded idea in finance: expect correlation with existing alphas; pair it with a quality leg."
+
+- id: FND_GROSS_PROFITABILITY
+  title: Gross profitability (quality)
+  category: auto
+  family: fnd_quality
+  horizon: slow
+  strength: 3
+  beginner: true
+  sign: "+1"
+  story: >
+    Gross profit (sales minus cost of goods) per unit of assets is the cleanest measure
+    of a firm's economic profitability - it is above most accounting choices.
+    Profitable firms earn higher future returns even though they look expensive.
+  why_persists: >
+    Investors focus on bottom-line earnings and valuation multiples and under-price
+    durable profitability.
+  references:
+    - "Novy-Marx (2013) The Other Side of Value: The Gross Profitability Premium, Journal of Financial Economics"
+  roles:
+    sales: {concept: sales}
+    cogs: {concept: cogs, optional: true}
+    gp: {concept: gross_profit, optional: true}
+    assets: {concept: assets}
+  ladder:
+    - name: from-gross-profit
+      expr: "group_rank(ts_backfill({gp}, 252) / ts_backfill({assets}, 252), subindustry)"
+      teaches: "Gross profit / total assets."
+    - name: from-sales-and-cogs
+      expr: "group_rank((ts_backfill({sales}, 252) - ts_backfill({cogs}, 252)) / ts_backfill({assets}, 252), subindustry)"
+      teaches: "Same, built from sales and cost of goods sold."
+    - name: profitable-and-cheap
+      expr: "group_rank(ts_backfill({gp}, 252) / ts_backfill({assets}, 252), subindustry) + group_rank(ts_backfill({sales}, 252) / cap, subindustry)"
+      teaches: "Novy-Marx's point: profitability and value hedge each other."
+  settings: {neutralization: SUBINDUSTRY, decay: 0, truncation: 0.08}
+  expected_turnover: [0.01, 0.06]
+  watch_out:
+    - "Low turnover - if LOW_TURNOVER fails, use ts_backfill windows of 63 or combine with a faster leg."
+
+- id: FND_ACCRUALS
+  title: Accruals (earnings not backed by cash)
+  category: auto
+  family: fnd_quality
+  horizon: slow
+  strength: 3
+  sign: "-1 on accruals"
+  story: >
+    When reported earnings are much higher than operating cash flow, the difference
+    (accruals) is made of accounting estimates that tend to reverse. Investors treat
+    all earnings alike, so high-accrual firms disappoint later.
+  why_persists: >
+    Investors fixate on headline earnings; analysing accruals takes work.
+  references:
+    - "Sloan (1996) Do Stock Prices Fully Reflect Information in Accruals and Cash Flows about Future Earnings?, The Accounting Review"
+  roles:
+    ni: {concept: net_income}
+    cfo: {concept: cfo}
+    assets: {concept: assets}
+  ladder:
+    - name: core
+      expr: "-group_rank((ts_backfill({ni}, 252) - ts_backfill({cfo}, 252)) / ts_backfill({assets}, 252), subindustry)"
+      teaches: "Accruals scaled by total assets; short the high-accrual firms."
+    - name: with-cash-quality
+      expr: "-group_rank((ts_backfill({ni}, 252) - ts_backfill({cfo}, 252)) / ts_backfill({assets}, 252), subindustry) + group_rank(ts_backfill({cfo}, 252) / ts_backfill({assets}, 252), subindustry)"
+      teaches: "Add cash return on assets: low accruals AND high cash generation."
+  settings: {neutralization: SUBINDUSTRY, decay: 0, truncation: 0.08}
+  expected_turnover: [0.01, 0.06]
+  watch_out:
+    - "The accrual anomaly weakened after 2000 in the USA; often stronger outside the US."
+
+- id: FND_ASSET_GROWTH
+  title: Asset growth / over-investment
+  category: auto
+  family: fnd_investment
+  horizon: slow
+  strength: 3
+  sign: "-1 on asset growth"
+  story: >
+    Firms that grow their balance sheet fast (acquisitions, capex, issuing debt or
+    equity) earn lower future returns: empire-building managers over-invest, and
+    investors over-extrapolate the growth.
+  why_persists: >
+    Growth narratives are attractive; the effect also reflects a lower required return
+    for firms whose growth options have been exercised.
+  references:
+    - "Cooper, Gulen & Schill (2008) Asset Growth and the Cross-Section of Stock Returns, Journal of Finance"
+  roles:
+    assets: {concept: assets}
+  ladder:
+    - name: core
+      expr: "-group_rank(ts_backfill({assets}, 252) / ts_delay(ts_backfill({assets}, 252), 252) - 1, subindustry)"
+      teaches: "One-year asset growth; negative sign."
+    - name: two-year
+      expr: "-group_rank(log(ts_backfill({assets}, 252) / ts_delay(ts_backfill({assets}, 252), 504)), subindustry)"
+      teaches: "Log growth over two years is less noisy."
+  settings: {neutralization: SUBINDUSTRY, decay: 0, truncation: 0.08}
+  expected_turnover: [0.01, 0.06]
+  watch_out:
+    - "Correlated with net issuance (PV_NET_ISSUANCE)."
+
+- id: FND_ABNORMAL_CAPEX
+  title: Abnormal capital investment
+  category: auto
+  family: fnd_investment
+  horizon: slow
+  strength: 2
+  sign: "-1"
+  story: >
+    Firms that suddenly invest much more than their own history (capex relative to
+    assets above its 3-year average) subsequently underperform - the market rewards
+    the investment story too early.
+  why_persists: "Managerial empire building; investors under-react to over-investment risk."
+  references:
+    - "Titman, Wei & Xie (2004) Capital Investments and Stock Returns, Journal of Financial and Quantitative Analysis"
+  roles:
+    capex: {concept: capex}
+    assets: {concept: assets}
+  ladder:
+    - name: core
+      expr: "-group_rank(ts_backfill({capex}, 252) / ts_backfill({assets}, 252) - ts_mean(ts_backfill({capex}, 252) / ts_backfill({assets}, 252), 756), subindustry)"
+      teaches: "Today's capex intensity minus its three-year average."
+  settings: {neutralization: SUBINDUSTRY, decay: 0, truncation: 0.08}
+  expected_turnover: [0.01, 0.06]
+  watch_out:
+    - "Capex is sometimes reported as a negative number - if Sharpe is strongly negative, check the sign convention."
+
+- id: FND_RECEIVABLES_STUFFING
+  title: Receivables growing faster than sales
+  category: auto
+  family: fnd_quality
+  horizon: slow
+  strength: 2
+  sign: "-1"
+  story: >
+    If customers owe a firm more and more money relative to what it sells, sales may
+    be pulled forward or collections are deteriorating. Earnings quality is falling
+    before it shows up in profits.
+  why_persists: "Requires reading the balance sheet against the income statement - few do it."
+  references:
+    - "Lev & Thiagarajan (1993) Fundamental Information Analysis, Journal of Accounting Research"
+  roles:
+    receivables: {concept: receivables}
+    sales: {concept: sales}
+  ladder:
+    - name: core
+      expr: "-group_rank(log(ts_backfill({receivables}, 252) / ts_delay(ts_backfill({receivables}, 252), 252)) - log(ts_backfill({sales}, 252) / ts_delay(ts_backfill({sales}, 252), 252)), subindustry)"
+      teaches: "Receivables growth minus sales growth."
+  settings: {neutralization: SUBINDUSTRY, decay: 0, truncation: 0.08}
+  expected_turnover: [0.01, 0.06]
+  watch_out: ["log() of zero/negative values is NaN - coverage will drop."]
+
+- id: FND_INVENTORY_BUILDUP
+  title: Inventory build-up
+  category: auto
+  family: fnd_quality
+  horizon: slow
+  strength: 2
+  sign: "-1"
+  story: >
+    A jump in inventory relative to assets often means products are not selling;
+    write-downs and lower margins follow.
+  why_persists: "Same as receivables: slow-moving balance-sheet detail investors skip."
+  references:
+    - "Thomas & Zhang (2002) Inventory Changes and Future Returns, Review of Accounting Studies"
+  roles:
+    inventory: {concept: inventory}
+    assets: {concept: assets}
+  ladder:
+    - name: core
+      expr: "-group_rank(ts_delta(ts_backfill({inventory}, 252), 252) / ts_backfill({assets}, 252), subindustry)"
+      teaches: "One-year change in inventory scaled by assets."
+  settings: {neutralization: SUBINDUSTRY, decay: 0, truncation: 0.08}
+  expected_turnover: [0.01, 0.06]
+  watch_out: ["Meaningless for service firms with no inventory (coverage)."]
+
+- id: FND_QUALITY_IMPROVEMENT
+  title: Improving fundamentals (Piotroski-style)
+  category: auto
+  family: fnd_quality
+  horizon: slow
+  strength: 3
+  sign: "+1"
+  story: >
+    Firms whose profitability is rising, whose leverage is falling and whose profits are
+    backed by cash are getting healthier. The market is slow to re-rate them.
+  why_persists: "Investors anchor on the old, weaker picture of the firm."
+  references:
+    - "Piotroski (2000) Value Investing: The Use of Historical Financial Statement Information, Journal of Accounting Research"
+  roles:
+    ni: {concept: net_income}
+    assets: {concept: assets}
+    debt: {concept: debt}
+  ladder:
+    - name: roa-change
+      expr: "group_rank(ts_delta(ts_backfill({ni}, 252) / ts_backfill({assets}, 252), 252), subindustry)"
+      teaches: "One leg first: change in return on assets."
+    - name: two-legs
+      expr: "group_rank(ts_delta(ts_backfill({ni}, 252) / ts_backfill({assets}, 252), 252), subindustry) + group_rank(-ts_delta(ts_backfill({debt}, 252) / ts_backfill({assets}, 252), 252), subindustry)"
+      teaches: "Add deleveraging. Each leg ranked so neither dominates."
+  settings: {neutralization: SUBINDUSTRY, decay: 0, truncation: 0.08}
+  expected_turnover: [0.01, 0.06]
+  watch_out: ["Add legs one at a time and keep only those that improve the out-of-sample-looking years."]
+
+- id: FND_RND_INTENSITY
+  title: R&D intensity (under-priced intangible investment)
+  category: auto
+  family: fnd_intangibles
+  horizon: slow
+  strength: 2
+  sign: "+1"
+  story: >
+    Accounting expenses R&D immediately, so R&D-heavy firms look less profitable and
+    more expensive than they are. Their future returns are higher.
+  why_persists: "Conservative accounting hides the value of intangible investment."
+  references:
+    - "Chan, Lakonishok & Sougiannis (2001) The Stock Market Valuation of Research and Development Expenditures, Journal of Finance"
+  roles:
+    rnd: {concept: rnd}
+  ladder:
+    - name: core
+      expr: "group_rank(ts_backfill({rnd}, 252) / cap, industry)"
+      teaches: "R&D per dollar of market value, within industry."
+  settings: {neutralization: INDUSTRY, decay: 0, truncation: 0.08}
+  expected_turnover: [0.01, 0.06]
+  watch_out: ["Many firms report no R&D - coverage concentrates in tech/pharma; INDUSTRY grouping is essential."]
+
+- id: FND_BOOK_TO_MARKET
+  title: Book-to-market (classic value)
+  category: auto
+  family: fnd_value
+  horizon: slow
+  strength: 2
+  sign: "+1"
+  story: >
+    Book equity per dollar of market value. The original value factor. It has been
+    weak in the US since 2007, so treat it as a teaching card and as a leg to combine
+    with profitability, not as a stand-alone alpha.
+  why_persists: "Distress risk and extrapolation; but heavily arbitraged."
+  references:
+    - "Fama & French (1993) Common Risk Factors in the Returns on Stocks and Bonds, Journal of Financial Economics"
+  roles:
+    equity: {concept: equity}
+  ladder:
+    - name: core
+      expr: "group_rank(ts_backfill({equity}, 252) / cap, subindustry)"
+      teaches: "Book-to-market within sub-industry."
+  settings: {neutralization: SUBINDUSTRY, decay: 0, truncation: 0.08}
+  expected_turnover: [0.01, 0.05]
+  watch_out: ["Extremely crowded; expect high production correlation."]
+
+# -------------------------------------------------------------------- ANALYST
+- id: ANL_EPS_REVISION
+  title: Earnings-estimate revisions
+  category: auto
+  family: anl_revision
+  horizon: medium
+  strength: 3
+  beginner: true
+  sign: "+1"
+  story: >
+    When analysts raise their earnings forecasts, the stock tends to keep rising for
+    weeks: analysts revise gradually (they herd and avoid big jumps) and investors
+    under-react to each small revision.
+  why_persists: "Analysts' gradual updating and investors' limited attention."
+  references:
+    - "Chan, Jegadeesh & Lakonishok (1996) Momentum Strategies, Journal of Finance"
+    - "Stickel (1991) Common Stock Returns Surrounding Earnings Forecast Revisions, The Accounting Review"
+  roles:
+    est: {concept: est_eps, note: "consensus forward EPS estimate"}
+  ladder:
+    - name: three-month-revision
+      expr: "group_rank(ts_delta(ts_backfill({est}, 63), 63) / close, subindustry)"
+      teaches: "Change in the estimate over a quarter, scaled by price (so it is comparable across stocks)."
+    - name: one-month-revision
+      expr: "group_rank(ts_delta(ts_backfill({est}, 63), 21) / close, subindustry)"
+      teaches: "Faster version - higher turnover, fresher information."
+    - name: blended
+      expr: "group_rank(ts_delta(ts_backfill({est}, 63), 21) / close, subindustry) + group_rank(ts_delta(ts_backfill({est}, 63), 63) / close, subindustry)"
+      teaches: "Two horizons of the same idea (WorldQuant webinar 'two-horizon' shape)."
+  settings: {neutralization: SUBINDUSTRY, decay: 4, truncation: 0.08}
+  expected_turnover: [0.05, 0.25]
+  watch_out:
+    - "Estimate fields are event-like: ts_delta needs ts_backfill first."
+
+- id: ANL_REVISION_BREADTH
+  title: Revision breadth (how many analysts raise vs cut)
+  category: auto
+  family: anl_revision
+  horizon: medium
+  strength: 3
+  sign: "+1"
+  story: >
+    The share of analysts raising versus lowering estimates captures the direction of
+    expert opinion without being distorted by one extreme forecast.
+  why_persists: "As for revisions: gradual information flow."
+  references:
+    - "Hawkins, Chamberlin & Daniel (1984) Earnings Expectations and Security Prices, Financial Analysts Journal"
+  roles:
+    up: {concept: rev_up}
+    down: {concept: rev_down, pair_with: up}
+  ladder:
+    - name: core
+      expr: "group_rank((ts_backfill({up}, 21) - ts_backfill({down}, 21)) / (ts_backfill({up}, 21) + ts_backfill({down}, 21) + 1), subindustry)"
+      teaches: "(ups - downs) / (ups + downs + 1). The +1 avoids dividing by zero."
+    - name: smoothed
+      expr: "ts_mean(group_rank((ts_backfill({up}, 21) - ts_backfill({down}, 21)) / (ts_backfill({up}, 21) + ts_backfill({down}, 21) + 1), subindustry), 21)"
+      teaches: "A month of smoothing: breadth is noisy day to day."
+  settings: {neutralization: SUBINDUSTRY, decay: 3, truncation: 0.08}
+  expected_turnover: [0.05, 0.30]
+  watch_out: ["Make sure 'up' and 'down' refer to the SAME item and horizon (e.g. FY1 EPS, 30 days)."]
+
+- id: ANL_DISPERSION
+  title: Analyst disagreement (dispersion)
+  category: auto
+  family: anl_dispersion
+  horizon: medium
+  strength: 3
+  sign: "-1"
+  story: >
+    When analysts disagree a lot, the optimists set the price (pessimists cannot easily
+    short), so the stock is overpriced and later underperforms.
+  why_persists: "Short-sale constraints (Miller 1977); high-dispersion stocks are hard to short."
+  references:
+    - "Diether, Malloy & Scherbina (2002) Differences of Opinion and the Cross Section of Stock Returns, Journal of Finance"
+    - "Miller (1977) Risk, Uncertainty, and Divergence of Opinion, Journal of Finance"
+  roles:
+    disp: {concept: est_dispersion}
+    est: {concept: est_eps, optional: true}
+  ladder:
+    - name: scaled-dispersion
+      when: {disp: [estimate, level, ratio, flow]}
+      expr: "-group_rank(ts_backfill({disp}, 63) / abs(ts_backfill({est}, 63)), subindustry)"
+      teaches: "Standard deviation of estimates divided by |mean estimate| (coefficient of variation)."
+    - name: dispersion-as-score
+      when: {disp: [rank_score, change]}
+      expr: "-group_rank(ts_backfill({disp}, 63), subindustry)"
+      teaches: "Use this rung when the bound field is already a vendor dispersion SCORE."
+  settings: {neutralization: SUBINDUSTRY, decay: 3, truncation: 0.08}
+  expected_turnover: [0.03, 0.20]
+  watch_out: ["Dividing by a near-zero mean estimate explodes: winsorize or use the score rung."]
+
+- id: ANL_RECOMMENDATION_CHANGE
+  title: Recommendation upgrades / downgrades
+  category: auto
+  family: anl_recommendation
+  horizon: medium
+  strength: 2
+  sign: "+1 on upgrades"
+  story: >
+    Changes in analysts' buy/sell recommendations move prices for weeks after the
+    announcement, especially upgrades of small stocks and downgrades of anything.
+  why_persists: "Investors under-react to the information content of rating changes."
+  references:
+    - "Womack (1996) Do Brokerage Analysts' Recommendations Have Investment Value?, Journal of Finance"
+    - "Jegadeesh, Kim, Krische & Lee (2004) Analyzing the Analysts, Journal of Finance"
+  roles:
+    rec: {concept: recommendation, note: "check direction: many vendors code 1 = Strong Buy"}
+  ladder:
+    - name: change
+      expr: "group_rank({dir:rec} * ts_delta(ts_backfill({rec}, 63), 63), subindustry)"
+      teaches: "Quarterly change in the consensus recommendation."
+    - name: level-plus-change
+      expr: "group_rank({dir:rec} * ts_backfill({rec}, 63), subindustry) + group_rank({dir:rec} * ts_delta(ts_backfill({rec}, 63), 63), subindustry)"
+      teaches: "Add the level: consensus 'buy' names that are being upgraded."
+  settings: {neutralization: SUBINDUSTRY, decay: 4, truncation: 0.08}
+  expected_turnover: [0.03, 0.20]
+  watch_out: ["If the first simulation has strongly negative Sharpe, the recommendation scale is inverted: multiply by -1 and log it."]
+
+- id: ANL_FORWARD_EY
+  title: Forward earnings yield (value with expectations)
+  category: auto
+  family: anl_value
+  horizon: slow
+  strength: 2
+  sign: "+1"
+  story: >
+    Price relative to what analysts expect the firm to earn NEXT year. It reacts faster
+    than book or trailing earnings and is less distorted by one-off items.
+  why_persists: "Value premium; extrapolation bias."
+  references:
+    - "Elleuch & Trabelsi (2009) Forward Earnings-to-Price Ratio and Stock Returns; see also Fama-French value literature"
+  roles:
+    est: {concept: est_eps}
+  ladder:
+    - name: core
+      expr: "group_rank(ts_backfill({est}, 63) / close, subindustry)"
+      teaches: "Forward EPS / price within sub-industry."
+    - name: cheap-and-upgraded
+      expr: "group_rank(ts_backfill({est}, 63) / close, subindustry) + group_rank(ts_delta(ts_backfill({est}, 63), 63) / close, subindustry)"
+      teaches: "Value plus revision momentum - two different mechanisms that hedge each other."
+  settings: {neutralization: SUBINDUSTRY, decay: 2, truncation: 0.08}
+  expected_turnover: [0.03, 0.15]
+  watch_out: ["Per-share estimate / price: make sure the estimate is per-share, not total."]
+
+- id: ANL_LTG_OPTIMISM
+  title: Over-optimistic long-term growth forecasts
+  category: auto
+  family: anl_dispersion
+  horizon: slow
+  strength: 2
+  sign: "-1"
+  story: >
+    Analysts' long-term growth forecasts are systematically too optimistic for the
+    firms with the highest forecasts. Those 'story stocks' underperform when growth
+    disappoints.
+  why_persists: "Analyst incentives and extrapolation."
+  references:
+    - "La Porta (1996) Expectations and the Cross-Section of Stock Returns, Journal of Finance"
+  roles:
+    ltg: {concept: est_ltg}
+  ladder:
+    - name: core
+      expr: "-group_rank(ts_backfill({ltg}, 126), subindustry)"
+      teaches: "Short the most optimistic growth forecasts within sub-industry."
+  settings: {neutralization: SUBINDUSTRY, decay: 2, truncation: 0.08}
+  expected_turnover: [0.01, 0.08]
+  watch_out: ["Coverage is often low; check after the first simulation."]
+
+- id: ANL_COVERAGE_GROWTH
+  title: Rising analyst coverage (attention)
+  category: auto
+  family: anl_attention
+  horizon: slow
+  strength: 1
+  sign: "+1"
+  story: >
+    When more analysts start covering a stock, it becomes visible to more investors
+    and its information environment improves - prices tend to rise.
+  why_persists: "Attention-driven demand; coverage initiations are slow-moving news."
+  references:
+    - "Irvine (2003) The Incremental Impact of Analyst Initiation of Coverage, Journal of Corporate Finance"
+  roles:
+    n: {concept: num_estimates}
+  ladder:
+    - name: core
+      expr: "group_rank(ts_delta(ts_backfill({n}, 63), 126) / (ts_backfill({n}, 63) + 1), industry)"
+      teaches: "Six-month relative change in the number of estimates."
+  settings: {neutralization: INDUSTRY, decay: 2, truncation: 0.08}
+  expected_turnover: [0.02, 0.10]
+  watch_out: ["Speculative (strength 1). Use as a second leg rather than a stand-alone alpha."]
+
+- id: ANL_TARGET_PRICE_REVISION
+  title: Target-price revisions
+  category: auto
+  family: anl_revision
+  horizon: medium
+  strength: 2
+  sign: "+1"
+  story: >
+    Changes in analysts' price targets carry information beyond earnings revisions -
+    they reflect changes in the valuation multiple analysts are willing to pay.
+  why_persists: "Gradual diffusion of analyst information."
+  references:
+    - "Brav & Lehavy (2003) An Empirical Analysis of Analysts' Target Prices, Journal of Finance"
+  roles:
+    tp: {concept: target_price}
+  ladder:
+    - name: core
+      expr: "group_rank(ts_delta(ts_backfill({tp}, 63), 63) / close, subindustry)"
+      teaches: "Quarterly change in target price, per dollar of price."
+  settings: {neutralization: SUBINDUSTRY, decay: 3, truncation: 0.08}
+  expected_turnover: [0.03, 0.20]
+  watch_out: ["Correlated with EPS revisions - check self-correlation if you hold ANL_EPS_REVISION."]
+
+# ------------------------------------------------------------------- EARNINGS
+- id: ERN_PEAD
+  title: Post-earnings-announcement drift
+  category: auto
+  family: ern_surprise
+  horizon: medium
+  strength: 3
+  beginner: true
+  sign: "+1"
+  story: >
+    After a positive earnings surprise (actual above what analysts expected), prices
+    keep drifting up for about 60 trading days; negative surprises drift down. The
+    market under-reacts to how persistent earnings surprises are.
+  why_persists: "Limited attention around announcements; the most studied anomaly that still survives."
+  references:
+    - "Bernard & Thomas (1989) Post-Earnings-Announcement Drift: Delayed Price Response or Risk Premium?, Journal of Accounting Research"
+  roles:
+    sur: {concept: surprise}
+  ladder:
+    - name: core
+      expr: "group_rank(ts_backfill({sur}, 63), subindustry)"
+      teaches: "Latest surprise, carried for one quarter."
+    - name: event-window
+      expr: "trade_when(days_from_last_change({sur}) < 63, group_rank(ts_backfill({sur}, 63), subindustry), days_from_last_change({sur}) > 63)"
+      teaches: "Hold only during the 63 days after the surprise changed, then exit (third argument)."
+    - name: fresh-news-weighted
+      expr: "group_rank(ts_backfill({sur}, 63), subindustry) * (1 - rank(days_from_last_change({sur})))"
+      teaches: "Weight fresher surprises more."
+  settings: {neutralization: SUBINDUSTRY, decay: 3, truncation: 0.08}
+  expected_turnover: [0.05, 0.25]
+  watch_out: ["Check the surprise is in % or scaled units; raw dollar surprises must be divided by price."]
+
+- id: ERN_CALL_TONE
+  title: Earnings-call tone
+  category: auto
+  family: ern_text
+  horizon: medium
+  strength: 2
+  sign: "+1"
+  story: >
+    The tone managers use on earnings calls (confident vs hedging language) predicts
+    future earnings and returns beyond the numbers, because text is processed slowly.
+  why_persists: "Soft information is hard to quantify; most investors read only the numbers."
+  references:
+    - "Price, Doran, Peterson & Bliss (2012) Earnings Conference Calls and Stock Returns: The Incremental Informativeness of Textual Tone, Journal of Banking & Finance"
+    - "Loughran & McDonald (2011) When Is a Liability Not a Liability?, Journal of Finance"
+  roles:
+    tone: {concept: call_tone, categories: [earnings, analyst, news, other, model]}
+  ladder:
+    - name: core
+      expr: "group_rank(ts_backfill({tone}, 63), subindustry)"
+      teaches: "Latest call tone carried for a quarter."
+    - name: tone-change
+      expr: "group_rank(ts_backfill({tone}, 63) - ts_delay(ts_backfill({tone}, 63), 63), subindustry)"
+      teaches: "Change versus the previous call - managers getting more confident."
+  settings: {neutralization: SUBINDUSTRY, decay: 3, truncation: 0.08}
+  expected_turnover: [0.03, 0.20]
+  watch_out: ["Make sure the bound field really is call/transcript tone (read the description)."]
+
+- id: ERN_ANNOUNCEMENT_CYCLE
+  title: Earnings announcement premium (approximate calendar)
+  category: auto
+  family: ern_calendar
+  horizon: fast
+  strength: 2
+  sign: "+1 just before expected announcements"
+  story: >
+    Stocks earn higher returns in the weeks around scheduled earnings announcements
+    (attention and risk are concentrated there). Firms report roughly every 63 trading
+    days, so 'days since the last reported value changed' predicts the next one.
+  why_persists: "Compensation for announcement risk and attention-driven buying."
+  references:
+    - "Frazzini & Lamont (2007) The Earnings Announcement Premium and Trading Volume, NBER WP 13090"
+  roles:
+    actual: {concept: eps, note: "a REPORTED (actual) per-share earnings field that changes at each announcement"}
+  ladder:
+    - name: approaching
+      expr: "trade_when(days_from_last_change(ts_backfill({actual}, 63)) > 50, rank(days_from_last_change(ts_backfill({actual}, 63))), days_from_last_change(ts_backfill({actual}, 63)) < 5)"
+      teaches: "Enter ~50 days after the last report, exit right after the next one (a regime trade with trade_when)."
+  settings: {neutralization: SUBINDUSTRY, decay: 0, truncation: 0.08}
+  expected_turnover: [0.05, 0.30]
+  watch_out: ["Experimental. If your region has a 'next earnings date' field, prefer it - inspect it with catalog.search('earnings date')."]
+
+# ---------------------------------------------------------------------- MODEL
+- id: MDL_VENDOR_SCORE
+  title: Use a vendor model score cleanly
+  category: auto
+  family: mdl_score
+  horizon: medium
+  strength: 2
+  beginner: true
+  sign: "from the field description"
+  story: >
+    Model datasets are other researchers' finished signals (valuation scores, quality
+    scores, predicted returns). Your job is to use them CLEANLY: correct direction,
+    compared with peers, smoothed so turnover is sensible. Prefer scores with high
+    coverage and low alpha count (less crowded).
+  why_persists: "Each vendor model blends many slow anomalies; the edge is diversification, not secrecy."
+  references:
+    - "WorldQuant BRAIN Pyramids guide (your PDF): Model is a low-lying pyramid with good coverage"
+  roles:
+    score: {concept: vendor_score, categories: [model], note: "any vendor score; direction read from the description"}
+  ladder:
+    - name: level
+      expr: "group_rank({dir:score} * ts_backfill({score}, 21), subindustry)"
+      teaches: "The score itself, direction-corrected, ranked within sub-industry."
+    - name: improving
+      expr: "group_rank({dir:score} * ts_delta(ts_backfill({score}, 21), 63), subindustry)"
+      teaches: "Change in the score over a quarter - often LESS correlated with existing alphas than the level."
+    - name: smoothed-level
+      expr: "ts_mean(group_rank({dir:score} * ts_backfill({score}, 21), subindustry), 5)"
+      teaches: "Weekly smoothing if turnover is too high."
+  settings: {neutralization: SUBINDUSTRY, decay: 4, truncation: 0.08}
+  expected_turnover: [0.03, 0.30]
+  watch_out:
+    - "Avoid the most-used fields (alpha_count in the thousands): your alpha will correlate with the pool."
+    - "Your Pyramids guide says it deliberately skips model110 - it is the most crowded model dataset."
+
+- id: MDL_VALUE_QUALITY_CONJ
+  title: Cheap AND high quality (min() conjunction)
+  category: auto
+  family: mdl_combo
+  horizon: slow
+  strength: 2
+  sign: "+1"
+  story: >
+    Cheap stocks are often cheap for a reason (bad quality); quality stocks are often
+    expensive. Requiring BOTH - with min() of the two ranks - keeps only names where
+    the two independent mechanisms agree, which cuts drawdowns.
+  why_persists: "Value and quality are negatively correlated, so few investors hold the intersection."
+  references:
+    - "Asness, Frazzini & Pedersen (2019) Quality Minus Junk, Review of Accounting Studies"
+    - "AlphaForge knowledge base in your zip: min() conjunction produced its best GLB submissions"
+  roles:
+    val: {concept: value_score, categories: [model, fundamental, analyst]}
+    qual: {concept: quality_score, categories: [model, fundamental, analyst]}
+  ladder:
+    - name: conjunction
+      expr: "min(group_rank({dir:val} * ts_backfill({val}, 21), subindustry), group_rank({dir:qual} * ts_backfill({qual}, 21), subindustry))"
+      teaches: "min() only gives a high value where BOTH legs are high."
+    - name: sum
+      expr: "group_rank({dir:val} * ts_backfill({val}, 21), subindustry) + group_rank({dir:qual} * ts_backfill({qual}, 21), subindustry)"
+      teaches: "Compare with the plain sum - min() usually has lower drawdown."
+  settings: {neutralization: SUBINDUSTRY, decay: 2, truncation: 0.08}
+  expected_turnover: [0.02, 0.12]
+  watch_out: ["Min needs one genuinely strong leg; two weak legs fail."]
+
+# ----------------------------------------------------------------------- RISK
+- id: RSK_LOW_BETA
+  title: Betting against beta (risk-model beta)
+  category: auto
+  family: rsk_lowrisk
+  horizon: slow
+  strength: 3
+  sign: "-1 on beta"
+  story: >
+    Leverage-constrained investors buy high-beta stocks to get market exposure,
+    bidding them up. Low-beta stocks have higher risk-adjusted returns.
+  why_persists: "Leverage constraints are structural (pension funds, mutual funds)."
+  references:
+    - "Frazzini & Pedersen (2014) Betting Against Beta, Journal of Financial Economics"
+    - "Black, Jensen & Scholes (1972) The Capital Asset Pricing Model: Some Empirical Tests"
+  roles:
+    beta: {concept: beta, categories: [risk, model, pv, other]}
+  ladder:
+    - name: core
+      expr: "-group_rank(ts_backfill({beta}, 21), sector)"
+      teaches: "Short high beta within sector."
+    - name: estimated-beta
+      expr: "-group_rank(ts_regression(returns, group_mean(returns, cap, market), 252, rettype=2), sector)"
+      teaches: "Estimate beta yourself: slope (rettype=2) of the stock on the cap-weighted market return."
+  settings: {neutralization: SECTOR, decay: 4, truncation: 0.08}
+  expected_turnover: [0.01, 0.08]
+  watch_out: ["Overlaps with PV_LOW_RISK."]
+
+- id: RSK_SHORT_INTEREST
+  title: Short interest (informed sellers)
+  category: auto
+  family: pos_short
+  horizon: medium
+  strength: 3
+  sign: "-1"
+  story: >
+    Short sellers are mostly sophisticated, well-researched investors. Heavily shorted
+    stocks (and stocks where shorting is increasing) underperform.
+  why_persists: "Shorting is costly and risky, so the information in short positions is only partly arbitraged."
+  references:
+    - "Asquith, Pathak & Ritter (2005) Short Interest, Institutional Ownership, and Stock Returns, JFE"
+    - "Boehmer, Jones & Zhang (2008) Which Shorts Are Informed?, Journal of Finance"
+  roles:
+    si: {concept: short_interest}
+  ladder:
+    - name: level
+      expr: "-group_rank(ts_backfill({si}, 21), subindustry)"
+      teaches: "Short the most-shorted names relative to peers."
+    - name: change
+      expr: "-group_rank(ts_delta(ts_backfill({si}, 21), 63), subindustry)"
+      teaches: "Increase in short interest over a quarter."
+  settings: {neutralization: SUBINDUSTRY, decay: 3, truncation: 0.08}
+  expected_turnover: [0.02, 0.15]
+  watch_out: ["Check the field's direction: some vendor 'short interest scores' are coded so that higher = less shorted."]
+
+- id: RSK_SPECIFIC_RISK
+  title: Idiosyncratic risk (risk-model specific risk)
+  category: auto
+  family: rsk_lowrisk
+  horizon: slow
+  strength: 2
+  sign: "-1"
+  story: >
+    Stocks with high firm-specific risk are popular with lottery-seeking investors and
+    hard to arbitrage; they earn lower returns.
+  why_persists: "Arbitrage risk is highest exactly in these stocks."
+  references:
+    - "Ang, Hodrick, Xing & Zhang (2006) The Cross-Section of Volatility and Expected Returns, Journal of Finance"
+  roles:
+    srisk: {concept: specific_risk, categories: [risk, model, pv, other]}
+  ladder:
+    - name: core
+      expr: "-group_rank(ts_backfill({srisk}, 21), sector)"
+      teaches: "Specific (residual) risk from a risk model, short the highest."
+  settings: {neutralization: SECTOR, decay: 4, truncation: 0.08}
+  expected_turnover: [0.01, 0.08]
+  watch_out: ["Size tilt - check sub-universe Sharpe."]
+
+# ------------------------------------------------------- SENTIMENT / NEWS
+- id: SNT_NEWS_DRIFT
+  title: News sentiment drift
+  category: auto
+  family: snt_news
+  horizon: fast
+  strength: 2
+  sign: "+1"
+  story: >
+    Prices react to news sentiment, but not completely on the day: positive news is
+    followed by a few more days of positive returns, negative news by negative returns.
+  why_persists: "Investors are slow to read and interpret large volumes of text."
+  references:
+    - "Tetlock (2007) Giving Content to Investor Sentiment, Journal of Finance"
+    - "Tetlock, Saar-Tsechansky & Macskassy (2008) More Than Words, Journal of Finance"
+  roles:
+    snt: {concept: sentiment, categories: [news, sentiment, socialmedia, other]}
+  ladder:
+    - name: weekly-average
+      expr: "group_rank(ts_mean(ts_backfill({snt}, 5), 5), subindustry)"
+      teaches: "Average sentiment over the last week."
+    - name: news-days-only
+      expr: "trade_when(ts_count_nans({snt}, 5) < 5, group_rank(ts_mean(ts_backfill({snt}, 5), 5), subindustry), -1)"
+      teaches: "Only update positions when there actually was news in the last week."
+    - name: surprise-vs-normal
+      expr: "group_rank(ts_mean(ts_backfill({snt}, 5), 5) - ts_mean(ts_backfill({snt}, 5), 63), subindustry)"
+      teaches: "Sentiment relative to the stock's own normal tone."
+  settings: {neutralization: SUBINDUSTRY, decay: 4, truncation: 0.08}
+  expected_turnover: [0.15, 0.60]
+  watch_out: ["Your Pyramids guide warns: news/sentiment often have very high turnover - smooth, or use trade_when."]
+
+- id: SNT_DISAGREEMENT
+  title: Disagreement in sentiment
+  category: auto
+  family: snt_disagreement
+  horizon: medium
+  strength: 2
+  sign: "-1"
+  story: >
+    When opinions about a stock diverge, optimists set the price because pessimists
+    find it hard to short. High disagreement predicts lower returns.
+  why_persists: "Short-sale constraints."
+  references:
+    - "Miller (1977) Risk, Uncertainty, and Divergence of Opinion, Journal of Finance"
+    - "Diether, Malloy & Scherbina (2002), Journal of Finance"
+  roles:
+    sd: {concept: sentiment_dispersion}
+  ladder:
+    - name: core
+      expr: "-group_rank(ts_mean(ts_backfill({sd}, 5), 21), subindustry)"
+      teaches: "Monthly average dispersion of sentiment."
+  settings: {neutralization: SUBINDUSTRY, decay: 4, truncation: 0.08}
+  expected_turnover: [0.05, 0.30]
+  watch_out: ["Overlaps with ANL_DISPERSION (same mechanism, different data) - a good diversifying pair across pyramids."]
+
+- id: SNT_ATTENTION_SHOCK
+  title: Attention shocks reverse (Barber-Odean)
+  category: auto
+  family: snt_attention
+  horizon: fast
+  strength: 2
+  sign: "-1"
+  story: >
+    Individual investors buy what grabs their attention (news buzz, extreme moves).
+    That attention-driven buying pushes prices up temporarily; they fall back later.
+  why_persists: "Retail investors are buyers of attention-grabbing stocks, rarely sellers (they only own a few)."
+  references:
+    - "Barber & Odean (2008) All That Glitters, Review of Financial Studies"
+    - "Da, Engelberg & Gao (2011) In Search of Attention, Journal of Finance"
+  roles:
+    buzz: {concept: news_volume}
+  ladder:
+    - name: core
+      expr: "-group_rank(ts_zscore(ts_backfill({buzz}, 5), 63), subindustry)"
+      teaches: "Unusual attention versus the stock's own quarter."
+  settings: {neutralization: SUBINDUSTRY, decay: 4, truncation: 0.08}
+  expected_turnover: [0.20, 0.60]
+  watch_out: ["If Sharpe is strongly POSITIVE with the sign flipped, attention is information in your data, not noise - log it."]
+
+# ------------------------------------------------------- POSITIONING
+- id: POS_INST_BREADTH
+  title: Institutional ownership breadth
+  category: auto
+  family: pos_institutions
+  horizon: slow
+  strength: 2
+  sign: "+1"
+  story: >
+    When the number of institutions buying a stock exceeds the number selling, informed
+    money is accumulating. Breadth of ownership changes predict returns.
+  why_persists: "13F-type holdings arrive with a lag and are tedious to process."
+  references:
+    - "Chen, Hong & Stein (2002) Breadth of Ownership and Stock Returns, Journal of Financial Economics"
+  roles:
+    buyers: {concept: inst_buyers}
+    sellers: {concept: inst_sellers, pair_with: buyers}
+  ladder:
+    - name: core
+      expr: "group_rank((ts_backfill({buyers}, 63) - ts_backfill({sellers}, 63)) / (ts_backfill({buyers}, 63) + ts_backfill({sellers}, 63) + 1), subindustry)"
+      teaches: "Net buyers / total active institutions."
+  settings: {neutralization: SUBINDUSTRY, decay: 2, truncation: 0.08}
+  expected_turnover: [0.01, 0.08]
+  watch_out: ["Quarterly data: very low turnover."]
+
+- id: POS_INSIDER_NET_BUY
+  title: Insider net buying
+  category: auto
+  family: pos_insiders
+  horizon: medium
+  strength: 3
+  sign: "+1"
+  story: >
+    Insiders sell for many reasons (diversification, taxes) but buy for one: they think
+    the stock is cheap. Net insider buying predicts outperformance.
+  why_persists: "Insiders have genuinely better information; trades are disclosed with a lag and noisily."
+  references:
+    - "Lakonishok & Lee (2001) Are Insider Trades Informative?, Review of Financial Studies"
+    - "Cohen, Malloy & Pomorski (2012) Decoding Inside Information, Journal of Finance"
+  roles:
+    buy: {concept: insider_buy}
+    sell: {concept: insider_sell, pair_with: buy}
+  ladder:
+    - name: core
+      expr: "group_rank(ts_backfill(({buy} - {sell}) / ({buy} + {sell} + 1), 126), subindustry)"
+      teaches: "Net buying share, carried for half a year."
+  settings: {neutralization: SUBINDUSTRY, decay: 2, truncation: 0.08}
+  expected_turnover: [0.02, 0.15]
+  watch_out: ["Sparse events: coverage drops - check long/short counts."]
+
+- id: OPT_CALL_PUT_IV
+  title: Call-minus-put implied volatility
+  category: auto
+  family: opt_iv
+  horizon: fast
+  strength: 2
+  sign: "+1"
+  story: >
+    Informed traders often trade options first. When calls are expensive relative to
+    puts (call IV above put IV), informed buying pressure is bullish.
+  why_persists: "Option markets lead stock markets; few equity investors watch option prices."
+  references:
+    - "Cremers & Weinbaum (2010) Deviations from Put-Call Parity and Stock Return Predictability, JFQA"
+  roles:
+    civ: {concept: implied_vol_call, categories: [option]}
+    piv: {concept: implied_vol_put, categories: [option], pair_with: civ}
+  ladder:
+    - name: core
+      expr: "group_rank(ts_backfill({civ}, 5) - ts_backfill({piv}, 5), subindustry)"
+      teaches: "Call IV minus put IV at matching strikes/maturities."
+  settings: {neutralization: SUBINDUSTRY, decay: 3, truncation: 0.08}
+  expected_turnover: [0.15, 0.50]
+  watch_out: ["Options data exists only in some regions (your Pyramids guide: 'limited to a few countries')."]
+
+- id: OPT_IV_RV_SPREAD
+  title: Realized minus implied volatility
+  category: auto
+  family: opt_iv
+  horizon: medium
+  strength: 2
+  sign: "+1 on realized minus implied"
+  story: >
+    When options price much more volatility than the stock has actually shown, option
+    traders fear bad news; when realized exceeds implied, the opposite.
+  why_persists: "Volatility risk premia and informed option trading."
+  references:
+    - "Bali & Hovakimian (2009) Volatility Spreads and Expected Stock Returns, Management Science"
+  roles:
+    iv: {concept: implied_vol, categories: [option]}
+  ladder:
+    - name: core
+      expr: "group_rank(ts_std_dev(returns, 21) * 15.87 - ts_backfill({iv}, 5), subindustry)"
+      teaches: "Monthly realized vol annualised (x sqrt(252) = 15.87) minus implied vol."
+  settings: {neutralization: SUBINDUSTRY, decay: 3, truncation: 0.08}
+  expected_turnover: [0.10, 0.40]
+  watch_out: ["Check the IV units (0.25 vs 25%) and rescale if needed."]
+
+# --------------------------------------------------------- MACRO / OTHER
+- id: MAC_MACRO_BETA
+  title: Sensitivity to a macro series
+  category: auto
+  family: mac_beta
+  horizon: slow
+  strength: 1
+  sign: "test once; decide from economics"
+  story: >
+    A macro field (rates, inflation, FX, commodity) has the SAME value for every stock,
+    so ranking it directly is meaningless. Instead estimate each stock's sensitivity
+    (beta) to the macro series and tilt away from - or towards - the most exposed
+    stocks. This is how a macro dataset becomes a stock-selection alpha (and fills
+    the Macro pyramid).
+  why_persists: "Investors underestimate how macro shocks propagate to individual firms."
+  references:
+    - "Chen, Roll & Ross (1986) Economic Forces and the Stock Market, Journal of Business"
+    - "Boons (2016) State Variables, Macroeconomic Activity, and the Cross Section of Individual Stocks, JFE"
+  roles:
+    macro: {concept: macro_series, categories: [macro], min_coverage: 0.0}
+  ladder:
+    - name: avoid-exposure
+      expr: "-group_rank(abs(ts_regression(returns, ts_delta({macro}, 1), 252, rettype=2)), sector)"
+      teaches: "Rolling 1-year beta of stock returns to daily changes in the macro series; short the most exposed."
+    - name: directional
+      expr: "group_rank(ts_regression(returns, ts_delta({macro}, 1), 252, rettype=2) * sign(ts_delta({macro}, 63)), sector)"
+      teaches: "Lean towards stocks that benefit from the macro series' current quarterly trend."
+  settings: {neutralization: SECTOR, decay: 4, truncation: 0.08}
+  expected_turnover: [0.03, 0.20]
+  watch_out: ["Speculative: two rungs maximum, then move on. The sign is a hypothesis to test, not a fact."]
+
+- id: IMB_PRESSURE_REVERSAL
+  title: Order-imbalance price pressure reverts
+  category: auto
+  family: imb_pressure
+  horizon: fast
+  strength: 2
+  sign: "-1"
+  story: >
+    Large order imbalances (for example at the closing auction) push prices away from
+    fair value temporarily; liquidity providers who take the other side earn the
+    reversal over the next days.
+  why_persists: "Payment for immediacy - the same economics as short-term reversal."
+  references:
+    - "Chordia & Subrahmanyam (2004) Order Imbalance and Individual Stock Returns, Journal of Financial Economics"
+  roles:
+    imb: {concept: order_imbalance, categories: [imbalance, pv, other]}
+  ladder:
+    - name: reversal
+      expr: "-group_rank(ts_mean(ts_backfill({imb}, 5), 3), subindustry)"
+      teaches: "Fade the last three days' imbalance."
+    - name: persistent-flow
+      expr: "group_rank(ts_mean(ts_backfill({imb}, 5), 21), subindustry)"
+      teaches: "If the reversal fails, test the opposite mechanism: a month of persistent buying = informed flow."
+  settings: {neutralization: SUBINDUSTRY, decay: 3, truncation: 0.08}
+  expected_turnover: [0.20, 0.65]
+  watch_out: ["Two opposite mechanisms are listed on purpose; test both ONCE and record which one your data supports."]
+
+- id: OTH_LINKED_FIRMS
+  title: Economically linked firms (customer/peer momentum)
+  category: auto
+  family: oth_links
+  horizon: medium
+  strength: 2
+  sign: "+1"
+  story: >
+    News about a firm's customers, suppliers or close peers predicts its own returns
+    because investors do not connect related companies quickly. A relationship or
+    statistical-cluster GROUP field lets you compute 'how did my linked firms do?'.
+  why_persists: "Limited attention to economic links."
+  references:
+    - "Cohen & Frazzini (2008) Economic Links and Predictable Returns, Journal of Finance"
+  roles:
+    g: {concept: relationship_group, type: GROUP, categories: [other, pv]}
+  ladder:
+    - name: linked-catch-up
+      expr: "rank(group_mean(ts_sum(returns, 21), cap, {g}) - ts_sum(returns, 21))"
+      teaches: "Cap-weighted return of the stock's linked group minus its own return."
+    - name: linked-momentum
+      expr: "rank(group_mean(ts_sum(returns, 63), cap, {g}))"
+      teaches: "Return of the linked group over a quarter."
+  settings: {neutralization: SUBINDUSTRY, decay: 4, truncation: 0.08}
+  expected_turnover: [0.10, 0.40]
+  watch_out: ["Your Pyramids guide lists other455 (Group) - and your handwritten note says 'oth455 - avoid' (crowded)."]
+
+# =============================================================================
+#  YOUR OWN CARDS GO BELOW. Copy a card above, change id/title/story/roles/ladder.
+# =============================================================================

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hypolab"
+version = "1.5.0"
+description = "Idea-first alpha research for WorldQuant BRAIN: hypotheses, linting, diagnosis, validation, Pyramids, plus the Idea Engine and a marimo cockpit."
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.26", "pandas>=2.1", "scipy>=1.11", "matplotlib>=3.8", "pyyaml>=6.0", "requests>=2.31"]
+
+[project.optional-dependencies]
+cockpit = ["marimo>=0.23"]
+
+[tool.setuptools]
+packages = ["hypolab", "hypolab.sandbox", "ideaengine"]
+
+[tool.setuptools.package-data]
+hypolab = ["library/*.yaml"]
+
+# marimo: when you edit the cockpit (marimo edit), changed cells are marked stale instead of re-running,
+# so nothing that spends a simulation runs by accident. Simulations also sit behind run buttons.
+[tool.marimo.runtime]
+on_cell_change = "lazy"
+
+[tool.marimo.display]
+theme = "dark"

@@ -1,0 +1,442 @@
+/* HYPOLAB "Matrix" theme - green phosphor on black, digital rain behind (apps/head.html), readable body text.
+   Loaded by every app: marimo.App(css_file="hypolab.css", html_head_file="head.html"). Colours mirror hypolab/theme.py.
+   Marimo themes itself with CSS variables and copies this file into its shadow roots, so selectors reach inside
+   tabs, buttons and forms. Never style bare [data-kind]: tab panels and buttons carry it too. */
+
+:root, :root.dark, .dark, .marimo, .dark .marimo, body {
+  color-scheme: dark !important;
+
+  /* palette */
+  --hl-bg: #010604;
+  --hl-surface: rgba(4, 18, 11, 0.86);
+  --hl-surface-solid: #04120b;
+  --hl-surface-2: #071c11;
+  --hl-surface-3: #0b2817;
+  --hl-border: #123a22;
+  --hl-text: #d2f5e1;          /* pale mint: long reading stays comfortable */
+  --hl-muted: #7fb196;
+  --hl-code: #00ff9c;          /* the code-rain green: primary */
+  --hl-code-dim: #0a7a4c;
+  --hl-cyan: #5ef2ff;          /* links, info */
+  --hl-pass: #00ff9c;          /* PASS / READY / LIVE: solid code green with dark text */
+  --hl-warn: #c3a6ff;          /* warnings: soft violet - sits with green (yellow did not) */
+  --hl-magenta: #ff7ad9;       /* INVERTED */
+  --hl-red: #ff4f6e;
+  --hl-violet: #c69bff;
+
+  /* marimo's own variables */
+  --background: var(--hl-bg) !important;
+  --foreground: var(--hl-text) !important;
+  --muted: var(--hl-surface-2) !important;
+  --muted-foreground: var(--hl-muted) !important;
+  --popover: #061a10 !important;
+  --popover-foreground: var(--hl-text) !important;
+  --card: var(--hl-surface-solid) !important;
+  --card-foreground: var(--hl-text) !important;
+  --border: var(--hl-border) !important;
+  --input: #1c5235 !important;
+  --primary: var(--hl-code) !important;
+  --primary-foreground: #001a0d !important;
+  --secondary: var(--hl-surface-3) !important;
+  --secondary-foreground: var(--hl-text) !important;
+  --accent: #0b3320 !important;
+  --accent-foreground: var(--hl-code) !important;
+  --link: var(--hl-cyan) !important;
+  --link-visited: var(--hl-violet) !important;
+  --ring: var(--hl-code) !important;
+  --destructive: var(--hl-red) !important;
+  --destructive-foreground: #1a0207 !important;
+  --success: var(--hl-pass) !important;
+  --success-foreground: #001a0d !important;
+  --action: #0b3320 !important;
+  --action-hover: #0f4229 !important;
+  --action-foreground: var(--hl-code) !important;
+  --base-shadow: #00000099 !important;
+  --base-shadow-darker: #000000c0 !important;
+  --cm-background: var(--hl-surface-solid) !important;
+  --radius: 6px !important;
+
+
+  /* marimo's built-in amber / yellow / orange (radix scales) -> dark violet: no yellow anywhere */
+  --amber-1: #14121f !important; --amber-2: #1b1525 !important; --amber-3: #291f43 !important; --amber-4: #33255b !important; --amber-5: #3c2e69 !important; --amber-6: #473876 !important; --amber-7: #56468b !important; --amber-8: #6958ad !important; --amber-9: #6e56cf !important; --amber-10: #7d66d9 !important; --amber-11: #c3a6ff !important; --amber-12: #ece6ff !important;
+  --yellow-1: #14121f !important; --yellow-2: #1b1525 !important; --yellow-3: #291f43 !important; --yellow-4: #33255b !important; --yellow-5: #3c2e69 !important; --yellow-6: #473876 !important; --yellow-7: #56468b !important; --yellow-8: #6958ad !important; --yellow-9: #6e56cf !important; --yellow-10: #7d66d9 !important; --yellow-11: #c3a6ff !important; --yellow-12: #ece6ff !important;
+  --orange-1: #14121f !important; --orange-2: #1b1525 !important; --orange-3: #291f43 !important; --orange-4: #33255b !important; --orange-5: #3c2e69 !important; --orange-6: #473876 !important; --orange-7: #56468b !important; --orange-8: #6958ad !important; --orange-9: #6e56cf !important; --orange-10: #7d66d9 !important; --orange-11: #c3a6ff !important; --orange-12: #ece6ff !important;
+  --marimo-heading-font: "JetBrains Mono", "Share Tech Mono", ui-monospace, monospace;
+  --marimo-text-font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --marimo-monospace-font: "JetBrains Mono", "Fira Mono", ui-monospace, monospace;
+}
+
+/* ------------------------------------------------------------------ page */
+/* html carries the background; body stays transparent so the rain canvas (z-index -1) shows through */
+html {
+  background-color: var(--hl-bg) !important;
+  color: var(--hl-text);
+}
+body {
+  background-color: transparent !important;
+  color: var(--hl-text);
+}
+html {
+  background-image:
+    radial-gradient(1100px 650px at 50% -20%, rgba(0, 255, 156, 0.10), transparent 65%),
+    radial-gradient(900px 600px at 50% 120%, rgba(0, 255, 156, 0.06), transparent 60%) !important;
+  background-attachment: fixed !important;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+/* faint CRT scanlines over everything, never blocking clicks. 1.4.3: no blend mode (it made the GPU re-mix the
+   whole screen on every rain frame) - a plain translucent layer looks the same at a fraction of the cost. */
+body::after {
+  content: "";
+  position: fixed; inset: 0; pointer-events: none; z-index: 2147483000;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.12) 0px, rgba(0, 0, 0, 0.12) 1px, transparent 1px, transparent 3px);
+}
+#App, #root, .marimo, main { background: transparent !important; }
+.marimo-cell, .marimo-cell.published { background: transparent !important; }
+
+/* the content column: a dark glass panel over the rain so text stays readable */
+#App > div > div:has(> .marimo-cell),
+div:has(> .marimo-cell.published) {
+  background: rgba(1, 8, 5, 0.86);
+  box-shadow: 0 0 0 1px rgba(0, 255, 156, 0.07);
+  border-radius: 10px;
+  /* 1.4.3: no backdrop blur - blurring a full-height panel over an animated canvas is what made scrolling and
+     typing lag on an integrated GPU */
+}
+
+/* ------------------------------------------------------------- text */
+.markdown, .prose {
+  color: var(--hl-text) !important;
+  font-size: 1rem;
+  line-height: 1.7;
+  --tw-prose-body: var(--hl-text);
+  --tw-prose-headings: var(--hl-text);
+  --tw-prose-bold: #ffffff;
+  --tw-prose-links: var(--hl-cyan);
+  --tw-prose-code: var(--hl-code);
+  --tw-prose-bullets: var(--hl-code-dim);
+  --tw-prose-counters: var(--hl-muted);
+  --tw-prose-hr: var(--hl-border);
+  --tw-prose-quotes: var(--hl-muted);
+  --tw-prose-th-borders: var(--hl-border);
+  --tw-prose-td-borders: var(--hl-border);
+  --tw-prose-invert-body: var(--hl-text);
+  --tw-prose-invert-headings: var(--hl-text);
+  --tw-prose-invert-bold: #ffffff;
+  --tw-prose-invert-links: var(--hl-cyan);
+  --tw-prose-invert-code: var(--hl-code);
+}
+.markdown p, .markdown li { max-width: 92ch; }
+.markdown strong, .prose strong { color: #f2fff7; font-weight: 650; }
+.markdown em { color: #b9e6cc; }
+
+h1, h2, h3, h4, .markdown h1, .markdown h2, .markdown h3, .markdown h4 {
+  font-family: var(--marimo-heading-font) !important;
+  letter-spacing: 0.01em;
+  color: var(--hl-text) !important;
+}
+h1, .markdown h1 {
+  display: inline-block !important;
+  width: fit-content !important;
+  font-size: 2.05rem !important;
+  font-weight: 700 !important;
+  color: var(--hl-code) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 6px rgba(0, 255, 156, 0.75), 0 0 22px rgba(0, 255, 156, 0.35), 0 0 48px rgba(0, 255, 156, 0.15);
+  animation: hl-boot 1.4s ease-out 1, hl-breathe 6s ease-in-out 1.4s infinite;
+}
+h1::before, .markdown h1::before { content: "> "; color: var(--hl-code-dim); text-shadow: none; }
+h1::after, .markdown h1::after {
+  content: "_"; margin-left: 0.15em; color: var(--hl-code);
+  animation: hl-cursor 1.1s steps(1) infinite;
+}
+h2, .markdown h2 {
+  font-size: 1.35rem !important;
+  font-weight: 600 !important;
+  color: #9dffd0 !important;
+  padding-left: 0.7rem;
+  border-left: 3px solid var(--hl-code);
+  margin-top: 1.8rem !important;
+  text-shadow: 0 0 12px rgba(0, 255, 156, 0.25);
+}
+h3, .markdown h3 {
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  color: #8fffc6 !important;
+}
+h4, .markdown h4 { color: var(--hl-code) !important; font-size: 1.02rem !important; }
+
+a, .markdown a { color: var(--hl-cyan) !important; text-decoration-color: rgba(94, 242, 255, 0.4); }
+a:hover { color: #b3f9ff !important; text-shadow: 0 0 10px rgba(94, 242, 255, 0.5); }
+
+code, .markdown code {
+  font-family: var(--marimo-monospace-font) !important;
+  color: var(--hl-code) !important;
+  background: rgba(0, 255, 156, 0.07) !important;
+  border: 1px solid rgba(0, 255, 156, 0.2);
+  border-radius: 4px;
+  padding: 0.06em 0.36em;
+  font-size: 0.88em;
+}
+.markdown code::before, .markdown code::after { content: none !important; }
+pre, .markdown pre {
+  background: #000a05 !important;
+  border: 1px solid var(--hl-border) !important;
+  border-left: 3px solid var(--hl-code) !important;
+  border-radius: 6px !important;
+  padding: 0.85rem 1rem !important;
+  box-shadow: inset 0 0 30px rgba(0, 255, 156, 0.05);
+}
+pre code, .markdown pre code {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  color: #7dffbf !important;
+  font-size: 0.9em;
+  line-height: 1.55;
+  text-shadow: 0 0 6px rgba(0, 255, 156, 0.35);
+}
+
+hr, .markdown hr { border-color: var(--hl-border) !important; }
+blockquote, .markdown blockquote {
+  border-left: 3px solid var(--hl-cyan) !important;
+  color: var(--hl-muted) !important;
+  background: rgba(94, 242, 255, 0.05);
+  padding: 0.3rem 1rem;
+  border-radius: 0 6px 6px 0;
+}
+
+/* ------------------------------------------------------------ verdicts */
+.hl-verdict {
+  display: inline-block;
+  font-family: var(--marimo-monospace-font);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 0.1rem 0.6rem;
+  margin-right: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+  animation: hl-reveal 0.9s ease-out 1;
+}
+.hl-v-pass, .hl-v-ready { color: #001a0d; background: var(--hl-pass); border-color: #8dffcf; box-shadow: 0 0 20px rgba(0, 255, 156, 0.6); }
+.hl-v-near     { color: var(--hl-code); background: rgba(0, 255, 156, 0.08); box-shadow: 0 0 14px rgba(0, 255, 156, 0.35); }
+.hl-v-weak     { color: var(--hl-warn); background: rgba(195, 166, 255, 0.10); }
+.hl-v-inverted { color: var(--hl-magenta); background: rgba(255, 122, 217, 0.10); box-shadow: 0 0 14px rgba(255, 122, 217, 0.3); }
+.hl-v-noise, .hl-v-budget, .hl-v-notready { color: var(--hl-muted); background: rgba(127, 177, 150, 0.08); }
+.hl-v-error, .hl-v-blocked { color: var(--hl-red); background: rgba(255, 79, 110, 0.10); }
+
+/* ----------------------------------------------------------- callouts */
+.admonition {
+  border-radius: 6px !important;
+  border: 1px solid var(--hl-border) !important;
+  border-left: 3px solid var(--hl-muted) !important;
+  background: var(--hl-surface) !important;
+  color: var(--hl-text) !important;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
+}
+.admonition.info, .admonition.note, .admonition.hint, .admonition.tip {
+  border-left-color: var(--hl-cyan) !important;
+  background: linear-gradient(90deg, rgba(94,242,255,0.10), var(--hl-surface) 45%) !important; }
+.admonition.success {
+  border-left-color: var(--hl-code) !important;
+  background: linear-gradient(90deg, rgba(0,255,156,0.12), var(--hl-surface) 45%) !important; }
+.admonition.warn, .admonition.warning, .admonition.attention, .admonition.caution {
+  border-left-color: var(--hl-warn) !important;
+  background: linear-gradient(90deg, rgba(195,166,255,0.13), var(--hl-surface) 45%) !important; }
+.admonition.danger, .admonition.error {
+  border-left-color: var(--hl-red) !important;
+  background: linear-gradient(90deg, rgba(255,79,110,0.12), var(--hl-surface) 45%) !important; }
+.admonition.neutral { border-left-color: #2f6b4b !important; }
+
+/* ---------------------------------------------------------------- tabs */
+[role="tablist"] {
+  background: rgba(3, 16, 10, 0.9) !important;
+  border: 1px solid var(--hl-border) !important;
+  border-radius: 8px !important;
+  padding: 4px !important;
+}
+[role="tab"] {
+  color: var(--hl-muted) !important;
+  font-family: var(--marimo-heading-font) !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 5px !important;
+  padding: 0.3rem 0.85rem !important;
+}
+[role="tab"]:hover { color: var(--hl-code) !important; background: var(--hl-surface-2) !important; }
+[role="tab"][data-state="active"] {
+  color: var(--hl-code) !important;
+  background: linear-gradient(180deg, #0c3a24, #072415) !important;
+  box-shadow: inset 0 -2px 0 var(--hl-code), 0 0 18px rgba(0, 255, 156, 0.25) !important;
+  text-shadow: 0 0 8px rgba(0, 255, 156, 0.6);
+}
+
+/* --------------------------------------------------------------- forms */
+div[class*="--amber-1"][class*="--amber-7"] {
+  background: linear-gradient(180deg, rgba(7, 30, 18, 0.95), rgba(3, 16, 10, 0.95)) !important;
+  border-color: #1a5a37 !important;
+  box-shadow: 0 0 0 1px rgba(0, 255, 156, 0.06), 0 0 30px rgba(0, 255, 156, 0.06), 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* ------------------------------------------------------------- buttons */
+button[class*="--grass-9"], button[class*="bg-action"] {
+  background: linear-gradient(180deg, #00ff9c, #00c978) !important;
+  color: #001a0d !important;
+  border-color: #7dffc8 !important;
+  font-family: var(--marimo-heading-font) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 0 1px rgba(0, 255, 156, 0.3), 0 0 18px rgba(0, 255, 156, 0.35) !important;
+}
+button[class*="--grass-9"] *, button[class*="bg-action"] * { color: #001a0d !important; text-shadow: none !important; }
+button[class*="--red-9"] *, button[class*="--crimson-9"] * { color: #1a0207 !important; }
+button[class*="--grass-9"]:hover, button[class*="bg-action"]:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 28px rgba(0, 255, 156, 0.6) !important;
+}
+button[class*="--red-9"], button[class*="--crimson-9"] {
+  background: linear-gradient(180deg, #ff4f6e, #d93355) !important;
+  color: #1a0207 !important;
+  border-color: #ff8fa2 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 16px rgba(255, 79, 110, 0.35) !important;
+}
+button[class*="--sky-9"], button[class*="--blue-9"] {
+  background: linear-gradient(180deg, #5ef2ff, #2fc4d6) !important;
+  color: #001519 !important;
+}
+button[class*="bg-secondary"] {
+  background: var(--hl-surface-2) !important;
+  color: var(--hl-text) !important;
+  border-color: #1c5235 !important;
+}
+button[class*="bg-secondary"]:hover { border-color: var(--hl-code) !important; color: var(--hl-code) !important; }
+/* 1.5.0: a disabled green/red button looked clickable */
+button:disabled, button[disabled] {
+  opacity: 0.38 !important;
+  filter: saturate(0.4) !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+}
+
+/* -------------------------------------------------------------- tables */
+table { border-color: var(--hl-border) !important; }
+thead, thead tr, thead th {
+  background: #06200f !important;
+  color: #8fffc6 !important;
+  font-family: var(--marimo-heading-font);
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+}
+tbody tr { background: rgba(3, 16, 10, 0.92) !important; }
+tbody tr:nth-child(even) { background: rgba(5, 22, 13, 0.92) !important; }
+tbody tr:hover { background: #0b3320 !important; }
+td, th { border-color: var(--hl-border) !important; color: var(--hl-text); }
+td { font-variant-numeric: tabular-nums; }
+
+/* -------------------------------------------------- inputs */
+input, select, textarea {
+  background: #010a06 !important;
+  color: var(--hl-text) !important;
+  border-color: #1c5235 !important;
+  border-radius: 5px !important;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  border-color: var(--hl-code) !important;
+  box-shadow: 0 0 0 3px rgba(0, 255, 156, 0.2), 0 0 16px rgba(0, 255, 156, 0.2) !important;
+}
+textarea { font-family: var(--marimo-monospace-font) !important; font-size: 0.92rem !important; color: #9dffd0 !important; }
+button { border-radius: 5px !important; }
+[role="checkbox"] { border-color: var(--hl-code) !important; background: transparent; }
+[role="checkbox"][data-state="checked"], [role="checkbox"][data-state="indeterminate"] {
+  background: var(--hl-code) !important;
+  box-shadow: 0 0 8px rgba(0, 255, 156, 0.5);
+}
+[role="checkbox"][data-state="checked"] *, [role="checkbox"][data-state="indeterminate"] * {
+  color: #001a0d !important; stroke: #001a0d !important;
+}
+
+/* ------------------------------------------------------- mode badge */
+.hl-pill {
+  display: inline-block;
+  font-family: var(--marimo-monospace-font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.12rem 0.55rem;
+  margin-right: 0.45rem;
+  border-radius: 3px;
+  vertical-align: 0.08em;
+}
+.hl-sandbox { color: var(--hl-cyan); background: rgba(94, 242, 255, 0.10); border: 1px solid rgba(94, 242, 255, 0.5); }
+.hl-live {
+  color: #001a0d; background: var(--hl-pass); border: 1px solid #8dffcf;
+  box-shadow: 0 0 14px rgba(0, 255, 156, 0.55);
+  animation: hl-pulse 2.4s ease-in-out infinite;
+}
+
+/* the Play tab's slogan and score strip */
+.hl-ticker {
+  font-family: var(--marimo-monospace-font);
+  color: var(--hl-code);
+  text-shadow: 0 0 8px rgba(0, 255, 156, 0.5);
+  letter-spacing: 0.05em;
+}
+.hl-score {
+  display: inline-block;
+  font-family: var(--marimo-monospace-font);
+  padding: 0.35rem 0.8rem;
+  margin: 0 0.5rem 0.4rem 0;
+  border: 1px solid var(--hl-border);
+  border-radius: 6px;
+  background: rgba(3, 16, 10, 0.9);
+  color: var(--hl-muted);
+}
+.hl-score b { color: var(--hl-code); font-size: 1.15rem; text-shadow: 0 0 10px rgba(0, 255, 156, 0.55); }
+
+/* ------------------------------------------------------------- scrollbars */
+* { scrollbar-color: #12512f transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #12512f; border-radius: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::selection { background: rgba(0, 255, 156, 0.3); color: #ffffff; }
+
+/* ------------------------------------------------------------- motion */
+@keyframes hl-boot { 0% { opacity: 0; letter-spacing: 0.4em; filter: blur(3px); } 100% { opacity: 1; } }
+@keyframes hl-breathe { 0%, 100% { text-shadow: 0 0 6px rgba(0,255,156,.75), 0 0 22px rgba(0,255,156,.35); }
+                        50% { text-shadow: 0 0 9px rgba(0,255,156,.95), 0 0 34px rgba(0,255,156,.5); } }
+@keyframes hl-cursor { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes hl-reveal { 0% { opacity: 0; transform: translateY(-4px); filter: blur(2px); } 100% { opacity: 1; } }
+@keyframes hl-pulse { 0%, 100% { box-shadow: 0 0 10px rgba(0,255,156,.45); } 50% { box-shadow: 0 0 22px rgba(0,255,156,.85); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; }
+}
+
+/* ------------------------------------------------------------- effects switch (1.4.3)
+   The [ FX ] button (bottom right) cycles full -> calm -> off; the choice is remembered in this browser.
+   calm: slower, dimmer rain, no scanlines, no looping glows.  off: no rain at all, no animation, no glow. */
+html.hl-fx-calm body::after, html.hl-fx-off body::after { display: none; }
+html.hl-fx-calm *, html.hl-fx-calm *::before, html.hl-fx-calm *::after { animation-iteration-count: 1 !important; }
+html.hl-fx-off *, html.hl-fx-off *::before, html.hl-fx-off *::after { animation: none !important; transition: none !important; }
+html.hl-fx-off h1, html.hl-fx-off .markdown h1, html.hl-fx-off button, html.hl-fx-off [role="tab"] { text-shadow: none !important; }
+html.hl-fx-off #hypolab-rain { display: none; }
+#hypolab-fx {
+  position: fixed; right: 12px; bottom: 12px; z-index: 2147483500;
+  font: 600 11px/1 "JetBrains Mono", monospace; letter-spacing: 0.08em;
+  color: var(--hl-code); background: rgba(1, 8, 5, 0.9); border: 1px solid rgba(0, 255, 156, 0.35);
+  border-radius: 6px; padding: 6px 9px; cursor: pointer; opacity: 0.75;
+}
+#hypolab-fx:hover { opacity: 1; }
+
+/* 1.5.0: read-only tables in the Drafts tab (HTML, see views.html_table) */
+.hl-mdtable { max-width: 100%; overflow-x: auto; }
+.hl-mdtable table { width: 100%; border-collapse: collapse; font-size: 0.86em; }
+.hl-mdtable th { text-align: left !important; color: var(--hl-code); font-family: var(--marimo-heading-font); font-weight: 600;
+  border-bottom: 1px solid var(--hl-border); padding: 4px 8px; white-space: nowrap; }
+.hl-mdtable td { text-align: left !important; vertical-align: top; padding: 4px 8px; border-bottom: 1px solid rgba(0, 255, 156, 0.08);
+  overflow-wrap: anywhere; }
+.hl-mdtable td code { white-space: pre-wrap; word-break: break-all; }
